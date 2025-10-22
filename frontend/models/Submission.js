@@ -1,23 +1,15 @@
 const mongoose = require("mongoose")
 
-const answerSchema = new mongoose.Schema({
-  question: {
-    type: String,
-    required: true,
-  },
-  answer: {
-    type: mongoose.Schema.Types.Mixed,
-    required: true,
-  },
-})
-
 const submissionSchema = new mongoose.Schema({
   formId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Form",
     required: true,
   },
-  answers: [answerSchema],
+  responses: {
+    type: Object,
+    required: true,
+  },
   submittedAt: {
     type: Date,
     default: Date.now,

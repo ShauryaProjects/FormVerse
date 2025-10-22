@@ -1,23 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import mongoose from 'mongoose'
-import path from 'path'
-import fs from 'fs'
-
-// Find the project root by looking for package.json
-function findProjectRoot() {
-  let currentDir = __dirname
-  while (currentDir !== path.dirname(currentDir)) {
-    if (fs.existsSync(path.join(currentDir, 'package.json'))) {
-      return currentDir
-    }
-    currentDir = path.dirname(currentDir)
-  }
-  return __dirname
-}
-
-const projectRoot = findProjectRoot()
-const Form = require(path.join(projectRoot, "../../models/Form.js"))
-const { cache } = require(path.join(projectRoot, "../../lib/redis.js"))
+// Use stable relative imports so they work on Vercel
+// File path: frontend/app/api/forms/route.ts
+const Form = require("../../../models/Form.js")
+const { cache } = require("../../../lib/redis.js")
 
 // Connect to MongoDB
 const connectDB = async () => {
