@@ -5,17 +5,28 @@ import mongoose from 'mongoose'
 const Form = require("../../../../models/Form.js")
 const { cache } = require("../../../../lib/redis.js")
 
-// Connect to MongoDB
+// Connect to MongoDB Atlas (via Vercel environment variables)
 const connectDB = async () => {
   if (mongoose.connections[0].readyState) {
+    console.log("🔄 MongoDB Atlas already connected")
     return
   }
   
   try {
-    await mongoose.connect(process.env.MONGO_URI!)
-    console.log("✅ MongoDB connected successfully")
+    console.log("🔗 Attempting MongoDB Atlas connection...")
+    
+    // Connect to MongoDB Atlas using Vercel environment variable
+    await mongoose.connect(process.env.MONGO_URI!, {
+      // MongoDB Atlas specific options
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      bufferCommands: false, // Disable mongoose buffering
+      bufferMaxEntries: 0 // Disable mongoose buffering
+    })
+    console.log("✅ MongoDB Atlas connected successfully via Vercel")
   } catch (error) {
-    console.error("❌ MongoDB connection error:", error)
+    console.error("❌ MongoDB Atlas connection error:", error)
     throw error
   }
 }
