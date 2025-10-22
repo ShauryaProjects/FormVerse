@@ -8,14 +8,23 @@ const { cache } = require("../../../lib/redis.js")
 // Connect to MongoDB
 const connectDB = async () => {
   if (mongoose.connections[0].readyState) {
+    console.log("🔄 MongoDB already connected")
     return
   }
   
   try {
+    console.log("🔗 Attempting MongoDB connection...")
+    console.log("📍 MONGO_URI:", process.env.MONGO_URI ? "Set" : "Not set")
+    
     await mongoose.connect(process.env.MONGO_URI!)
     console.log("✅ MongoDB connected successfully")
   } catch (error) {
     console.error("❌ MongoDB connection error:", error)
+    console.error("❌ Error details:", {
+      name: (error as Error).name,
+      message: (error as Error).message,
+      code: (error as any).code
+    })
     throw error
   }
 }
@@ -61,9 +70,25 @@ export async function GET() {
 // POST /api/forms - Create a new form
 export async function POST(request: NextRequest) {
   try {
+    console.log("🔄 Starting form creation...")
+    
+    // Check if MongoDB URI is available
+    if (!process.env.MONGO_URI) {
+      console.error("❌ MONGO_URI environment variable not set")
+      return NextResponse.json({
+        success: false,
+        message: "Database configuration error",
+        error: "MONGO_URI not configured"
+      }, { status: 500 })
+    }
+
+    console.log("🔗 Connecting to MongoDB...")
     await connectDB()
+    console.log("✅ MongoDB connected successfully")
     
     const body = await request.json()
+    console.log("📝 Form data received:", { title: body.title, stepsCount: body.steps?.length, questionsCount: body.questions?.length })
+    
     const { title, description, questions, steps, createdBy } = body
 
     if (!title) {
@@ -74,6 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new form
+    console.log("📋 Creating form document...")
     const newForm = new Form({
       title,
       description: description || "",
@@ -82,11 +108,17 @@ export async function POST(request: NextRequest) {
       createdBy: createdBy || "anonymous",
     })
 
+    console.log("💾 Saving form to database...")
     const savedForm = await newForm.save()
-    console.log(`✅ Form created: ${savedForm._id}`)
+    console.log(`✅ Form created successfully: ${savedForm._id}`)
 
-    // Invalidate forms cache
-    await cache.del('forms:all')
+    // Try to invalidate cache (don't fail if Redis is not available)
+    try {
+      await cache.del('forms:all')
+      console.log("🗑️ Forms cache invalidated")
+    } catch (cacheError) {
+      console.warn("⚠️ Cache invalidation failed (Redis may not be available):", cacheError)
+    }
 
     return NextResponse.json({
       success: true,
@@ -94,10 +126,10 @@ export async function POST(request: NextRequest) {
       message: "Form created successfully",
     }, { status: 201 })
   } catch (error) {
-    console.error("Error:", error)
+    console.error("❌ Form creation error:", error)
     return NextResponse.json({
       success: false,
-      message: "Internal server error",
+      message: "Failed to save form. Please try again.",
       error: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
     }, { status: 500 })
   }
