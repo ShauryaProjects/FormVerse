@@ -85,9 +85,39 @@ export async function GET(
 
     console.log(`✅ Retrieved form ${id} from database:`, { id: form._id, title: form.title })
 
+    // Transform data structure to match frontend expectations
+    const transformedForm = {
+      _id: form._id,
+      title: form.title,
+      description: form.description,
+      steps: form.steps.map(step => ({
+        id: step._id || `step-${Math.random()}`,
+        title: step.title
+      })),
+      questions: form.steps.flatMap(step => 
+        step.questions.map(q => ({
+          id: q._id || `question-${Math.random()}`,
+          text: q.label,
+          type: q.type,
+          required: q.required,
+          options: q.options || [],
+          stepId: step._id || `step-${Math.random()}`
+        }))
+      ),
+      createdAt: form.createdAt,
+      updatedAt: form.updatedAt
+    }
+    
+    console.log("🔄 Transformed form for frontend:", {
+      id: transformedForm._id,
+      title: transformedForm.title,
+      stepsCount: transformedForm.steps.length,
+      questionsCount: transformedForm.questions.length
+    })
+
     // Try to cache for 10 minutes (don't fail if Redis is not available)
     try {
-      await cache.set(`form:${id}`, form, 600)
+      await cache.set(`form:${id}`, transformedForm, 600)
       console.log("💾 Form cached successfully")
     } catch (cacheError) {
       console.warn("⚠️ Cache storage failed (Redis may not be available):", cacheError)
@@ -95,7 +125,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: form,
+      data: transformedForm,
       message: "Form retrieved successfully",
     })
   } catch (error) {

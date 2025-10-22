@@ -108,13 +108,33 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Create new form
+    // Transform data structure to match MongoDB schema
     console.log("📋 Creating form document...")
+    console.log("📊 Original data:", { title, steps: steps?.length, questions: questions?.length })
+    
+    // Transform questions to be nested inside steps
+    const transformedSteps = (steps || []).map(step => {
+      const stepQuestions = (questions || []).filter(q => q.stepId === step.id)
+      return {
+        title: step.title,
+        questions: stepQuestions.map(q => ({
+          type: q.type,
+          label: q.text,
+          options: q.options || [],
+          required: q.required || false
+        }))
+      }
+    })
+    
+    console.log("🔄 Transformed steps:", transformedSteps.map(s => ({ 
+      title: s.title, 
+      questionsCount: s.questions.length 
+    })))
+    
     const newForm = new Form({
       title,
       description: description || "",
-      steps: steps || [],
-      questions: questions || [],
+      steps: transformedSteps,
       createdBy: createdBy || "anonymous",
     })
 
