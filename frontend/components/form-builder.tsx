@@ -76,8 +76,19 @@ export default function FormBuilder() {
       }
 
       const savedForm = await response.json()
-      setSavedFormId(savedForm.data?._id || savedForm._id)
-      console.log("Form saved successfully:", savedForm)
+      console.log("Full API response:", savedForm)
+      
+      // Handle different response structures
+      const formId = savedForm.data?._id || savedForm._id || savedForm.data?.id || savedForm.id
+      console.log("Extracted form ID:", formId)
+      
+      if (formId) {
+        setSavedFormId(formId)
+        console.log("Form saved successfully with ID:", formId)
+      } else {
+        console.error("No form ID found in response:", savedForm)
+        setSaveError("Form saved but no ID returned")
+      }
     } catch (error) {
       console.error("Error saving form:", error)
       setSaveError("Failed to save form. Please try again.")
@@ -151,6 +162,14 @@ export default function FormBuilder() {
                   <p className="text-sm text-red-600">{saveError}</p>
                 </div>
               )}
+
+              {/* Debug Info */}
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                <h3 className="mb-2 text-sm font-semibold text-blue-800">Debug Info:</h3>
+                <p className="text-xs text-blue-600">savedFormId: {savedFormId || "null"}</p>
+                <p className="text-xs text-blue-600">isSaving: {isSaving ? "true" : "false"}</p>
+                <p className="text-xs text-blue-600">saveError: {saveError || "null"}</p>
+              </div>
 
               {/* Saved Form Link */}
               {savedFormId && (
