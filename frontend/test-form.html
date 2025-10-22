@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Form Creation</title>
+</head>
+<body>
+    <h1>Test Form Creation</h1>
+    <button onclick="testFormCreation()">Test Form Creation</button>
+    <div id="result"></div>
+
+    <script>
+        async function testFormCreation() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch('/api/forms', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title: 'Test Form from Browser',
+                        description: 'This is a test form created from browser',
+                        questions: [],
+                        steps: []
+                    })
+                });
+
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h3>Response Status: ${response.status}</h3>
+                    <h3>Response Data:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+                console.log('Full response:', response);
+                console.log('Response data:', data);
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<h3>Error: ${error.message}</h3>`;
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
