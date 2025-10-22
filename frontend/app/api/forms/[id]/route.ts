@@ -35,42 +35,63 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log("🔍 Form viewing request for ID:", params.id)
+    
     await connectDB()
     
     const { id } = params
 
     if (!id) {
+      console.log("❌ No form ID provided")
       return NextResponse.json({
         success: false,
         message: "Form ID is required",
       }, { status: 400 })
     }
 
+    console.log("🔍 Searching for form with ID:", id)
+
     // Try to get from cache first
-    const cachedForm = await cache.get(`form:${id}`)
-    if (cachedForm) {
-      console.log(`📦 Serving form ${id} from cache`)
-      return NextResponse.json({
-        success: true,
-        data: cachedForm,
-        message: "Form retrieved successfully (cached)",
-      })
+    try {
+      const cachedForm = await cache.get(`form:${id}`)
+      if (cachedForm) {
+        console.log(`📦 Serving form ${id} from cache`)
+        return NextResponse.json({
+          success: true,
+          data: cachedForm,
+          message: "Form retrieved successfully (cached)",
+        })
+      }
+    } catch (cacheError) {
+      console.warn("⚠️ Cache lookup failed (Redis may not be available):", cacheError)
     }
 
     // Get from database
+    console.log("🔍 Querying database for form:", id)
     const form = await Form.findById(id)
     
     if (!form) {
+      console.log("❌ Form not found in database for ID:", id)
+      
+      // Let's also check if there are any forms in the database
+      const allForms = await Form.find().limit(5)
+      console.log("📊 Available forms in database:", allForms.map(f => ({ id: f._id, title: f.title })))
+      
       return NextResponse.json({
         success: false,
         message: "Form not found",
       }, { status: 404 })
     }
 
-    console.log(`📊 Retrieved form ${id} from database`)
+    console.log(`✅ Retrieved form ${id} from database:`, { id: form._id, title: form.title })
 
-    // Cache for 10 minutes
-    await cache.set(`form:${id}`, form, 600)
+    // Try to cache for 10 minutes (don't fail if Redis is not available)
+    try {
+      await cache.set(`form:${id}`, form, 600)
+      console.log("💾 Form cached successfully")
+    } catch (cacheError) {
+      console.warn("⚠️ Cache storage failed (Redis may not be available):", cacheError)
+    }
 
     return NextResponse.json({
       success: true,
@@ -78,7 +99,7 @@ export async function GET(
       message: "Form retrieved successfully",
     })
   } catch (error) {
-    console.error("Error:", error)
+    console.error("❌ Form viewing error:", error)
     return NextResponse.json({
       success: false,
       message: "Internal server error",
