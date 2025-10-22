@@ -1,8 +1,23 @@
 const mongoose = require("mongoose")
 const path = require("path")
-const Submission = require(path.resolve(__dirname, "../../../../models/Submission"))
-const Form = require(path.resolve(__dirname, "../../../../models/Form"))
-const { cache } = require(path.resolve(__dirname, "../../../../lib/redis"))
+const fs = require("fs")
+
+// Find the project root by looking for package.json
+function findProjectRoot() {
+  let currentDir = __dirname
+  while (currentDir !== path.dirname(currentDir)) {
+    if (fs.existsSync(path.join(currentDir, 'package.json'))) {
+      return currentDir
+    }
+    currentDir = path.dirname(currentDir)
+  }
+  return __dirname
+}
+
+const projectRoot = findProjectRoot()
+const Form = require(path.join(projectRoot, "models/Form.js"))
+const Submission = require(path.join(projectRoot, "models/Submission.js"))
+const { cache } = require(path.join(projectRoot, "lib/redis.js"))
 
 // Connect to MongoDB
 const connectDB = async () => {
@@ -19,7 +34,6 @@ const connectDB = async () => {
   }
 }
 
-// GET /api/forms/[id]/submissions - Get all submissions for a form
 // POST /api/forms/[id]/submissions - Submit a form response
 export default async function handler(req, res) {
   // Set CORS headers
@@ -39,49 +53,26 @@ export default async function handler(req, res) {
   try {
     await connectDB()
 
-    const { id: formId } = req.query
+    if (req.method === 'POST') {
+      const { id } = req.query
+      const { responses, formId } = req.body
 
-    if (req.method === 'GET') {
-      // Try to get from cache first
-      const cacheKey = `submissions:${formId}`
-      let cachedData = await cache.get(cacheKey)
-      
-      if (!cachedData) {
-        // Verify form exists
-        const form = await Form.findById(formId)
-        if (!form) {
-          return res.status(404).json({
-            success: false,
-            message: "Form not found",
-          })
-        }
-
-        const submissions = await Submission.find({ formId }).sort({ submittedAt: -1 })
-        
-        cachedData = {
-          form: {
-            id: form._id,
-            title: form.title,
-            description: form.description,
-          },
-          submissions,
-          count: submissions.length,
-        }
-        
-        // Cache for 2 minutes
-        await cache.set(cacheKey, cachedData, 120)
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          message: "Form ID is required",
+        })
       }
 
-      res.status(200).json({
-        success: true,
-        data: cachedData,
-        message: "Submissions retrieved successfully",
-      })
-    } else if (req.method === 'POST') {
-      const { answers } = req.body
+      if (!responses || typeof responses !== 'object') {
+        return res.status(400).json({
+          success: false,
+          message: "Form responses are required",
+        })
+      }
 
-      // Verify form exists
-      const form = await Form.findById(formId)
+      // Verify the form exists
+      const form = await Form.findById(id)
       if (!form) {
         return res.status(404).json({
           success: false,
@@ -89,27 +80,41 @@ export default async function handler(req, res) {
         })
       }
 
-      if (!answers || answers.length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: "Answers are required",
-        })
-      }
-
+      // Create the submission
       const submission = new Submission({
-        formId,
-        answers,
+        formId: id,
+        responses: responses,
+        submittedAt: new Date(),
       })
 
       await submission.save()
 
-      // Invalidate submissions cache when new submission is created
-      await cache.del(`submissions:${formId}`)
+      // Invalidate form cache when new submission is created
+      await cache.del(`form:${id}`)
 
       res.status(201).json({
         success: true,
         data: submission,
         message: "Form submitted successfully",
+      })
+    } else if (req.method === 'GET') {
+      const { id } = req.query
+
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          message: "Form ID is required",
+        })
+      }
+
+      // Get all submissions for this form
+      const submissions = await Submission.find({ formId: id })
+        .sort({ submittedAt: -1 })
+
+      res.status(200).json({
+        success: true,
+        data: submissions,
+        message: "Submissions retrieved successfully",
       })
     } else {
       res.setHeader('Allow', ['GET', 'POST'])
@@ -117,14 +122,6 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     console.error("Error:", error)
-
-    if (error.kind === "ObjectId") {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid form ID",
-      })
-    }
-
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -132,4 +129,3 @@ export default async function handler(req, res) {
     })
   }
 }
-
