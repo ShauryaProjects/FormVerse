@@ -123,6 +123,39 @@ export default function FormBuilder() {
       </header>
 
       <div className="container mx-auto px-6 pt-24 pb-12">
+        {/* Success Message - Outside scrollable area */}
+        {savedFormId && (
+          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-2xl mx-auto px-4">
+            <div className="rounded-2xl border-2 border-green-500 bg-green-100 p-6 mb-6 shadow-lg">
+              <h3 className="mb-2 text-xl font-bold text-green-900">🎉 Form Saved Successfully!</h3>
+              <p className="mb-3 text-sm text-green-700">Share this link with others:</p>
+              <div className="flex items-center gap-3">
+                <Input
+                  readOnly
+                  value={`${typeof window !== "undefined" ? window.location.origin : ""}/form/${savedFormId}`}
+                  className="flex-1 border-green-400 bg-white text-black font-mono"
+                />
+                <Button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/form/${savedFormId}`)
+                  }}
+                  variant="outline"
+                  className="border-green-400 bg-green-200 text-green-800 hover:bg-green-300"
+                >
+                  Copy Link
+                </Button>
+              </div>
+              <div className="mt-3">
+                <Link href="/admin">
+                  <Button className="bg-green-600 text-white hover:bg-green-700">
+                    View in Admin Dashboard
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-[20%_55%_25%] gap-0 h-[calc(100vh-8rem)]">
           {/* Left Column: Steps Panel (20%) */}
           <div className="overflow-y-auto pr-6 border-r border-black/10">
@@ -176,37 +209,6 @@ export default function FormBuilder() {
                   Test Success Message
                 </button>
               </div>
-
-              {/* Saved Form Link */}
-              {savedFormId && (
-                <div className="rounded-2xl border-2 border-green-500 bg-green-100 p-6 mb-6 shadow-lg">
-                  <h3 className="mb-2 text-xl font-bold text-green-900">🎉 Form Saved Successfully!</h3>
-                  <p className="mb-3 text-sm text-green-700">Share this link with others:</p>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      readOnly
-                      value={`${typeof window !== "undefined" ? window.location.origin : ""}/form/${savedFormId}`}
-                      className="flex-1 border-green-400 bg-white text-black font-mono"
-                    />
-                    <Button
-                      onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/form/${savedFormId}`)
-                      }}
-                      variant="outline"
-                      className="border-green-400 bg-green-200 text-green-800 hover:bg-green-300"
-                    >
-                      Copy Link
-                    </Button>
-                  </div>
-                  <div className="mt-3">
-                    <Link href="/admin">
-                      <Button className="bg-green-600 text-white hover:bg-green-700">
-                        View in Admin Dashboard
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
