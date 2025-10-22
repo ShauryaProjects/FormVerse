@@ -1,22 +1,18 @@
 {
-  "name": "formify-backend",
+  "name": "formify",
   "version": "1.0.0",
-  "description": "Backend API for Formify form builder - Vercel Serverless",
-  "main": "api/index.js",
+  "description": "Formify form builder - Full Stack Application",
+  "private": true,
   "scripts": {
-    "start": "vercel dev",
-    "dev": "vercel dev",
-    "build": "echo 'No build step required for Vercel'",
-    "deploy": "vercel --prod"
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "cd frontend && npm start",
+    "deploy": "cd frontend && vercel --prod"
   },
-  "keywords": ["vercel", "serverless", "mongodb", "redis", "forms", "api"],
+  "keywords": ["forms", "builder", "nextjs", "mongodb", "redis"],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "mongoose": "^8.0.0",
-    "redis": "^4.6.0"
-  },
-  "devDependencies": {
-    "vercel": "^32.0.0"
-  }
+  "workspaces": [
+    "frontend"
+  ]
 }
