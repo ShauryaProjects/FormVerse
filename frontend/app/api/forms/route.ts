@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getForms, addForm } from '../../../lib/forms-storage'
+import { getForms, addForm, deleteFormById } from '../../../lib/forms-storage'
 
 // GET /api/forms - Get all forms
 export async function GET() {
@@ -8,6 +8,43 @@ export async function GET() {
       success: true,
       data: getForms(),
       message: "Forms retrieved successfully",
+    })
+  } catch (error) {
+    console.error("Error:", error)
+    return NextResponse.json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+    }, { status: 500 })
+  }
+}
+
+// DELETE /api/forms - Delete a form by ID (for admin dashboard)
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const formId = searchParams.get('id')
+
+    if (!formId) {
+      return NextResponse.json({
+        success: false,
+        message: "Form ID is required",
+      }, { status: 400 })
+    }
+
+    const deletedForm = deleteFormById(formId)
+    
+    if (!deletedForm) {
+      return NextResponse.json({
+        success: false,
+        message: "Form not found",
+      }, { status: 404 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: deletedForm,
+      message: "Form deleted successfully",
     })
   } catch (error) {
     console.error("Error:", error)
@@ -52,6 +89,43 @@ export async function POST(request: NextRequest) {
       data: newForm,
       message: "Form created successfully",
     }, { status: 201 })
+  } catch (error) {
+    console.error("Error:", error)
+    return NextResponse.json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+    }, { status: 500 })
+  }
+}
+
+// DELETE /api/forms - Delete a form by ID (for admin dashboard)
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const formId = searchParams.get('id')
+
+    if (!formId) {
+      return NextResponse.json({
+        success: false,
+        message: "Form ID is required",
+      }, { status: 400 })
+    }
+
+    const deletedForm = deleteFormById(formId)
+    
+    if (!deletedForm) {
+      return NextResponse.json({
+        success: false,
+        message: "Form not found",
+      }, { status: 404 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: deletedForm,
+      message: "Form deleted successfully",
+    })
   } catch (error) {
     console.error("Error:", error)
     return NextResponse.json({

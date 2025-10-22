@@ -139,7 +139,7 @@ export default function AdminDashboardPage() {
     try {
       setIsLoading(true)
       setError(null)
-      const res = await fetch(`/api/forms/${formId}`, { method: "DELETE" })
+      const res = await fetch(`/api/forms?id=${formId}`, { method: "DELETE" })
       if (!res.ok) throw new Error("Failed to delete form")
       setForms((prev) => prev.filter((f) => f._id !== formId))
       if (selectedForm?._id === formId) handleBackToForms()
