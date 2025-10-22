@@ -19,14 +19,6 @@ export async function GET() {
   }
 }
 
-// DELETE /api/forms - Delete a form (this will be handled by the [id] route)
-export async function DELETE() {
-  return NextResponse.json({
-    success: false,
-    message: "Use DELETE /api/forms/[id] to delete a specific form",
-  }, { status: 405 })
-}
-
 // POST /api/forms - Create a new form
 export async function POST(request: NextRequest) {
   try {
@@ -68,12 +60,4 @@ export async function POST(request: NextRequest) {
       error: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
     }, { status: 500 })
   }
-}
-
-// DELETE /api/forms - Delete a form (this will be handled by the [id] route)
-export async function DELETE() {
-  return NextResponse.json({
-    success: false,
-    message: "Use DELETE /api/forms/[id] to delete a specific form",
-  }, { status: 405 })
 }
