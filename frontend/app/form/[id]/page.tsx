@@ -84,7 +84,9 @@ export default function FormViewPage() {
           id: formData._id,
           title: formData.title,
           stepsCount: formData.steps?.length,
-          questionsCount: formData.questions?.length
+          questionsCount: formData.questions?.length,
+          steps: formData.steps,
+          questions: formData.questions
         })
         
         setFormData(formData)
@@ -106,6 +108,18 @@ export default function FormViewPage() {
   const currentStepQuestions = formData?.questions?.filter(q => q.stepId === currentStep?.id) || []
   const isFirstStep = currentStepIndex === 0
   const isLastStep = currentStepIndex === (formData?.steps?.length || 1) - 1
+
+  // Debug logging
+  console.log("🔍 Form rendering debug:", {
+    formData: !!formData,
+    steps: formData?.steps,
+    questions: formData?.questions,
+    currentStepIndex,
+    currentStep,
+    currentStepQuestions,
+    allQuestionsCount: formData?.questions?.length || 0,
+    currentStepQuestionsCount: currentStepQuestions.length
+  })
 
   const handleInputChange = (questionId: string, value: any) => {
     setFormResponses(prev => ({
