@@ -1,12 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getForms, addForm, deleteFormById } from '../../../lib/forms-storage'
+import mongoose from 'mongoose'
+
+// Use stable relative imports so they work on Vercel
+const Form = require("../../../models/Form.js")
+const { cache } = require("../../../lib/redis.js")
+
+// Connect to MongoDB
+const connectDB = async () => {
+  if (mongoose.connections[0].readyState) {
+    return
+  }
+  
+  try {
+    await mongoose.connect(process.env.MONGO_URI!)
+    console.log("✅ MongoDB connected successfully")
+  } catch (error) {
+    console.error("❌ MongoDB connection error:", error)
+    throw error
+  }
+}
 
 // GET /api/forms - Get all forms
 export async function GET() {
   try {
+    await connectDB()
+    
+    // Try to get from cache first
+    const cachedForms = await cache.get('forms:all')
+    if (cachedForms) {
+      console.log("📦 Serving forms from cache")
+      return NextResponse.json({
+        success: true,
+        data: cachedForms,
+        message: "Forms retrieved successfully (cached)",
+      })
+    }
+
+    // Get from database
+    const forms = await Form.find().sort({ createdAt: -1 })
+    console.log(`📊 Retrieved ${forms.length} forms from database`)
+
+    // Cache for 5 minutes
+    await cache.set('forms:all', forms, 300)
+
     return NextResponse.json({
       success: true,
-      data: getForms(),
+      data: forms,
       message: "Forms retrieved successfully",
     })
   } catch (error) {
@@ -22,6 +61,8 @@ export async function GET() {
 // POST /api/forms - Create a new form
 export async function POST(request: NextRequest) {
   try {
+    await connectDB()
+    
     const body = await request.json()
     const { title, description, questions, steps, createdBy } = body
 
@@ -32,24 +73,24 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Create new form and add to storage
-    const newForm = {
-      _id: `form-${Date.now()}`,
+    // Create new form
+    const newForm = new Form({
       title,
       description: description || "",
       steps: steps || [],
       questions: questions || [],
       createdBy: createdBy || "anonymous",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
+    })
 
-    // Add to storage
-    addForm(newForm)
+    const savedForm = await newForm.save()
+    console.log(`✅ Form created: ${savedForm._id}`)
+
+    // Invalidate forms cache
+    await cache.del('forms:all')
 
     return NextResponse.json({
       success: true,
-      data: newForm,
+      data: savedForm,
       message: "Form created successfully",
     }, { status: 201 })
   } catch (error) {
@@ -65,6 +106,8 @@ export async function POST(request: NextRequest) {
 // DELETE /api/forms - Delete a form by ID (for admin dashboard)
 export async function DELETE(request: NextRequest) {
   try {
+    await connectDB()
+    
     const { searchParams } = new URL(request.url)
     const formId = searchParams.get('id')
 
@@ -75,7 +118,7 @@ export async function DELETE(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const deletedForm = deleteFormById(formId)
+    const deletedForm = await Form.findByIdAndDelete(formId)
     
     if (!deletedForm) {
       return NextResponse.json({
@@ -83,6 +126,12 @@ export async function DELETE(request: NextRequest) {
         message: "Form not found",
       }, { status: 404 })
     }
+
+    console.log(`🗑️ Form deleted: ${formId}`)
+
+    // Invalidate caches
+    await cache.del('forms:all')
+    await cache.del(`form:${formId}`)
 
     return NextResponse.json({
       success: true,

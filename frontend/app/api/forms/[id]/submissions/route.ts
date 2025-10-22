@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
+import mongoose from 'mongoose'
 
-// Simple in-memory storage for submissions (will reset on server restart)
-let submissionsStorage: any[] = []
+// Use stable relative imports so they work on Vercel
+const Form = require("../../../../../models/Form.js")
+const Submission = require("../../../../../models/Submission.js")
+const { cache } = require("../../../../../lib/redis.js")
+
+// Connect to MongoDB
+const connectDB = async () => {
+  if (mongoose.connections[0].readyState) {
+    return
+  }
+  
+  try {
+    await mongoose.connect(process.env.MONGO_URI!)
+    console.log("✅ MongoDB connected successfully")
+  } catch (error) {
+    console.error("❌ MongoDB connection error:", error)
+    throw error
+  }
+}
 
 // POST /api/forms/[id]/submissions - Submit a form response
 export async function POST(
@@ -9,6 +27,8 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    await connectDB()
+    
     const { id } = params
     const body = await request.json()
 
@@ -19,21 +39,30 @@ export async function POST(
       }, { status: 400 })
     }
 
-    // Create new submission
-    const newSubmission = {
-      _id: `submission-${Date.now()}`,
-      formId: id,
-      responses: body.responses || {},
-      submittedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString()
+    // Verify form exists
+    const form = await Form.findById(id)
+    if (!form) {
+      return NextResponse.json({
+        success: false,
+        message: "Form not found",
+      }, { status: 404 })
     }
 
-    // Add to storage
-    submissionsStorage.push(newSubmission)
+    // Create new submission
+    const newSubmission = new Submission({
+      formId: id,
+      responses: body.responses || {},
+    })
+
+    const savedSubmission = await newSubmission.save()
+    console.log(`✅ Submission created for form ${id}`)
+
+    // Invalidate submissions cache
+    await cache.del(`submissions:${id}`)
 
     return NextResponse.json({
       success: true,
-      data: newSubmission,
+      data: savedSubmission,
       message: "Form submitted successfully",
     }, { status: 201 })
   } catch (error) {
@@ -52,6 +81,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    await connectDB()
+    
     const { id } = params
 
     if (!id) {
@@ -61,12 +92,27 @@ export async function GET(
       }, { status: 400 })
     }
 
-    // Find submissions for this form
-    const formSubmissions = submissionsStorage.filter(s => s.formId === id)
+    // Try to get from cache first
+    const cachedSubmissions = await cache.get(`submissions:${id}`)
+    if (cachedSubmissions) {
+      console.log(`📦 Serving submissions for form ${id} from cache`)
+      return NextResponse.json({
+        success: true,
+        data: { submissions: cachedSubmissions },
+        message: "Submissions retrieved successfully (cached)",
+      })
+    }
+
+    // Get from database
+    const submissions = await Submission.find({ formId: id }).sort({ submittedAt: -1 })
+    console.log(`📊 Retrieved ${submissions.length} submissions for form ${id}`)
+
+    // Cache for 2 minutes
+    await cache.set(`submissions:${id}`, submissions, 120)
 
     return NextResponse.json({
       success: true,
-      data: { submissions: formSubmissions },
+      data: { submissions },
       message: "Submissions retrieved successfully",
     })
   } catch (error) {

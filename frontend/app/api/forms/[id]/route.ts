@@ -1,12 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { findFormById, deleteFormById } from '../../../../lib/forms-storage'
+import mongoose from 'mongoose'
 
-// GET /api/forms/[id] - Get a specific form by ID
+// Use stable relative imports so they work on Vercel
+const Form = require("../../../../models/Form.js")
+const { cache } = require("../../../../lib/redis.js")
+
+// Connect to MongoDB
+const connectDB = async () => {
+  if (mongoose.connections[0].readyState) {
+    return
+  }
+  
+  try {
+    await mongoose.connect(process.env.MONGO_URI!)
+    console.log("✅ MongoDB connected successfully")
+  } catch (error) {
+    console.error("❌ MongoDB connection error:", error)
+    throw error
+  }
+}
+
+// GET /api/forms/[id] - Get a specific form
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    await connectDB()
+    
     const { id } = params
 
     if (!id) {
@@ -16,8 +37,19 @@ export async function GET(
       }, { status: 400 })
     }
 
-    // Find form in storage
-    const form = findFormById(id)
+    // Try to get from cache first
+    const cachedForm = await cache.get(`form:${id}`)
+    if (cachedForm) {
+      console.log(`📦 Serving form ${id} from cache`)
+      return NextResponse.json({
+        success: true,
+        data: cachedForm,
+        message: "Form retrieved successfully (cached)",
+      })
+    }
+
+    // Get from database
+    const form = await Form.findById(id)
     
     if (!form) {
       return NextResponse.json({
@@ -26,20 +58,14 @@ export async function GET(
       }, { status: 404 })
     }
 
-    // Transform the form data to match frontend expectations
-    const transformedForm = {
-      _id: form._id,
-      title: form.title,
-      description: form.description,
-      steps: form.steps || [],
-      questions: form.questions || [],
-      createdAt: form.createdAt,
-      updatedAt: form.updatedAt
-    }
+    console.log(`📊 Retrieved form ${id} from database`)
+
+    // Cache for 10 minutes
+    await cache.set(`form:${id}`, form, 600)
 
     return NextResponse.json({
       success: true,
-      data: transformedForm,
+      data: form,
       message: "Form retrieved successfully",
     })
   } catch (error) {
@@ -58,6 +84,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    await connectDB()
+    
     const { id } = params
 
     if (!id) {
@@ -67,8 +95,7 @@ export async function DELETE(
       }, { status: 400 })
     }
 
-    // Find and remove form from storage
-    const deletedForm = deleteFormById(id)
+    const deletedForm = await Form.findByIdAndDelete(id)
     
     if (!deletedForm) {
       return NextResponse.json({
@@ -76,6 +103,12 @@ export async function DELETE(
         message: "Form not found",
       }, { status: 404 })
     }
+
+    console.log(`🗑️ Form deleted: ${id}`)
+
+    // Invalidate caches
+    await cache.del('forms:all')
+    await cache.del(`form:${id}`)
 
     return NextResponse.json({
       success: true,

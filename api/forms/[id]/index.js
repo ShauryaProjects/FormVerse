@@ -69,13 +69,13 @@ export default async function handler(req, res) {
       if (!form) {
         // If not in cache, get from database
         form = await Form.findById(id)
-        
-        if (!form) {
-          return res.status(404).json({
-            success: false,
-            message: "Form not found",
-          })
-        }
+
+      if (!form) {
+        return res.status(404).json({
+          success: false,
+          message: "Form not found",
+        })
+      }
 
         // Cache for 10 minutes
         await cache.set(cacheKey, form, 600)
