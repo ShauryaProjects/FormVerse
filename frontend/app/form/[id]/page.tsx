@@ -53,21 +53,43 @@ export default function FormViewPage() {
     const fetchForm = async () => {
       try {
         setLoading(true)
+        console.log("🔍 Fetching form with ID:", formId)
+        
         const response = await fetch(`/api/forms/${formId}`)
+        console.log("📡 API response status:", response.status)
         
         if (!response.ok) {
           if (response.status === 404) {
+            console.log("❌ Form not found (404)")
             setError("Form not found")
           } else {
+            console.log("❌ API error:", response.status)
             setError("Failed to load form")
           }
           return
         }
 
         const data = await response.json()
-        setFormData(data.data || data)
+        console.log("📊 API response data:", data)
+        
+        // Validate the form data structure
+        if (!data.data && !data._id) {
+          console.error("❌ Invalid form data structure:", data)
+          setError("Invalid form data")
+          return
+        }
+        
+        const formData = data.data || data
+        console.log("✅ Form data received:", {
+          id: formData._id,
+          title: formData.title,
+          stepsCount: formData.steps?.length,
+          questionsCount: formData.questions?.length
+        })
+        
+        setFormData(formData)
       } catch (err) {
-        console.error("Error fetching form:", err)
+        console.error("❌ Error fetching form:", err)
         setError("Failed to load form")
       } finally {
         setLoading(false)
@@ -79,10 +101,11 @@ export default function FormViewPage() {
     }
   }, [formId])
 
-  const currentStep = formData?.steps[currentStepIndex]
-  const currentStepQuestions = formData?.questions.filter(q => q.stepId === currentStep?.id) || []
+  // Safe access to form data with fallbacks
+  const currentStep = formData?.steps?.[currentStepIndex] || null
+  const currentStepQuestions = formData?.questions?.filter(q => q.stepId === currentStep?.id) || []
   const isFirstStep = currentStepIndex === 0
-  const isLastStep = currentStepIndex === (formData?.steps.length || 1) - 1
+  const isLastStep = currentStepIndex === (formData?.steps?.length || 1) - 1
 
   const handleInputChange = (questionId: string, value: any) => {
     setFormResponses(prev => ({
@@ -180,9 +203,14 @@ export default function FormViewPage() {
     )
   }
 
-  if (!formData) return null
+  if (!formData) {
+    console.log("❌ No form data available")
+    return null
+  }
 
-  return (
+  // Add error boundary for rendering
+  try {
+    return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-6 py-12 max-w-2xl">
         {/* Form Header */}
@@ -336,5 +364,21 @@ export default function FormViewPage() {
         )}
       </div>
     </div>
-  )
+    )
+  } catch (renderError) {
+    console.error("❌ Render error:", renderError)
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6">
+          <h1 className="text-2xl font-bold text-black mb-4">Form Error</h1>
+          <p className="text-black/60 mb-6">There was an error loading this form. Please try again.</p>
+          <Link href="/">
+            <Button className="bg-black text-white hover:bg-black/90">
+              Go to Home
+            </Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
 }
