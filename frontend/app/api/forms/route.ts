@@ -1,28 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getForms, addForm } from '../../../lib/forms-storage'
 
 // GET /api/forms - Get all forms
 export async function GET() {
   try {
-    // For now, just return mock data to avoid database connection issues
-    const mockForms = [
-      {
-        _id: "mock-form-1",
-        title: "Sample Form 1",
-        description: "This is a sample form",
-        createdAt: new Date().toISOString()
-      },
-      {
-        _id: "mock-form-2",
-        title: "Sample Form 2", 
-        description: "Another sample form",
-        createdAt: new Date().toISOString()
-      }
-    ]
-
     return NextResponse.json({
       success: true,
-      data: mockForms,
-      message: "Forms retrieved successfully (mock data)",
+      data: getForms(),
+      message: "Forms retrieved successfully",
     })
   } catch (error) {
     console.error("Error:", error)
@@ -32,6 +17,14 @@ export async function GET() {
       error: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
     }, { status: 500 })
   }
+}
+
+// DELETE /api/forms - Delete a form (this will be handled by the [id] route)
+export async function DELETE() {
+  return NextResponse.json({
+    success: false,
+    message: "Use DELETE /api/forms/[id] to delete a specific form",
+  }, { status: 405 })
 }
 
 // POST /api/forms - Create a new form
@@ -47,11 +40,11 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Return mock response for now
-    const mockForm = {
-      _id: `mock-form-${Date.now()}`,
+    // Create new form and add to storage
+    const newForm = {
+      _id: `form-${Date.now()}`,
       title,
-      description,
+      description: description || "",
       steps: steps || [],
       questions: questions || [],
       createdBy: createdBy || "anonymous",
@@ -59,9 +52,12 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date().toISOString()
     }
 
+    // Add to storage
+    addForm(newForm)
+
     return NextResponse.json({
       success: true,
-      data: mockForm,
+      data: newForm,
       message: "Form created successfully",
     }, { status: 201 })
   } catch (error) {
@@ -72,4 +68,12 @@ export async function POST(request: NextRequest) {
       error: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
     }, { status: 500 })
   }
+}
+
+// DELETE /api/forms - Delete a form (this will be handled by the [id] route)
+export async function DELETE() {
+  return NextResponse.json({
+    success: false,
+    message: "Use DELETE /api/forms/[id] to delete a specific form",
+  }, { status: 405 })
 }
