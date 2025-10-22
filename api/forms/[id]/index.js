@@ -1,6 +1,7 @@
 const mongoose = require("mongoose")
-const Form = require("../../../models/Form")
-const { cache } = require("../../../lib/redis")
+const path = require("path")
+const Form = require(path.resolve(__dirname, "../../../models/Form"))
+const { cache } = require(path.resolve(__dirname, "../../../lib/redis"))
 
 // Connect to MongoDB
 const connectDB = async () => {
