@@ -1,26 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import mongoose from 'mongoose'
 
-// Use stable relative imports so they work on Vercel
-// File path: frontend/app/api/forms/[id]/submissions/route.ts
-const Form = require("../../../../../models/Form.js")
-const Submission = require("../../../../../models/Submission.js")
-const { cache } = require("../../../../../lib/redis.js")
-
-// Connect to MongoDB
-const connectDB = async () => {
-  if (mongoose.connections[0].readyState) {
-    return
-  }
-  
-  try {
-    await mongoose.connect(process.env.MONGO_URI!)
-    console.log("✅ MongoDB connected successfully")
-  } catch (error) {
-    console.error("❌ MongoDB connection error:", error)
-    throw error
-  }
-}
+// Simple in-memory storage for submissions (will reset on server restart)
+let submissionsStorage: any[] = []
 
 // POST /api/forms/[id]/submissions - Submit a form response
 export async function POST(
@@ -28,11 +9,8 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectDB()
-
     const { id } = params
     const body = await request.json()
-    const { responses, formId } = body
 
     if (!id) {
       return NextResponse.json({
@@ -41,37 +19,21 @@ export async function POST(
       }, { status: 400 })
     }
 
-    if (!responses || typeof responses !== 'object') {
-      return NextResponse.json({
-        success: false,
-        message: "Form responses are required",
-      }, { status: 400 })
-    }
-
-    // Verify the form exists
-    const form = await Form.findById(id)
-    if (!form) {
-      return NextResponse.json({
-        success: false,
-        message: "Form not found",
-      }, { status: 404 })
-    }
-
-    // Create the submission
-    const submission = new Submission({
+    // Create new submission
+    const newSubmission = {
+      _id: `submission-${Date.now()}`,
       formId: id,
-      responses: responses,
-      submittedAt: new Date(),
-    })
+      responses: body.responses || {},
+      submittedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
+    }
 
-    await submission.save()
-
-    // Invalidate form cache when new submission is created
-    await cache.del(`form:${id}`)
+    // Add to storage
+    submissionsStorage.push(newSubmission)
 
     return NextResponse.json({
       success: true,
-      data: submission,
+      data: newSubmission,
       message: "Form submitted successfully",
     }, { status: 201 })
   } catch (error) {
@@ -90,8 +52,6 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectDB()
-
     const { id } = params
 
     if (!id) {
@@ -101,13 +61,12 @@ export async function GET(
       }, { status: 400 })
     }
 
-    // Get all submissions for this form
-    const submissions = await Submission.find({ formId: id })
-      .sort({ submittedAt: -1 })
+    // Find submissions for this form
+    const formSubmissions = submissionsStorage.filter(s => s.formId === id)
 
     return NextResponse.json({
       success: true,
-      data: submissions,
+      data: { submissions: formSubmissions },
       message: "Submissions retrieved successfully",
     })
   } catch (error) {
