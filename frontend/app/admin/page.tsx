@@ -52,7 +52,8 @@ export default function AdminDashboardPage() {
       setError(null)
       const res = await fetch("/api/forms")
       if (!res.ok) throw new Error("Failed to load forms")
-      const data = (await res.json()) as FormItem[]
+      const response = await res.json()
+      const data = response.data || response as FormItem[]
       setForms(data)
       setStats((s) => ({ ...s, totalForms: data.length }))
     } catch (e: any) {
@@ -118,7 +119,8 @@ export default function AdminDashboardPage() {
       setError(null)
       const res = await fetch(`/api/forms/${form._id}/submissions`)
       if (!res.ok) throw new Error("Failed to load submissions")
-      const data = (await res.json()) as SubmissionItem[]
+      const response = await res.json()
+      const data = response.data?.submissions || response.submissions || response as SubmissionItem[]
       setSubmissions(data)
       setSelectedForm(form)
     } catch (e: any) {

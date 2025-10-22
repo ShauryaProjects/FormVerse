@@ -12,3 +12,4 @@ yarn-error.log*
 # build output (if any)
 build
 dist
+.vercel

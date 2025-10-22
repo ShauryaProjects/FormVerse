@@ -75,7 +75,7 @@ export default function FormBuilder() {
       }
 
       const savedForm = await response.json()
-      setSavedFormId(savedForm._id)
+      setSavedFormId(savedForm.data?._id || savedForm._id)
       console.log("Form saved successfully:", savedForm)
     } catch (error) {
       console.error("Error saving form:", error)
