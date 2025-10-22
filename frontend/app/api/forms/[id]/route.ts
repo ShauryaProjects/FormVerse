@@ -31,23 +31,8 @@ export async function GET(
       _id: form._id,
       title: form.title,
       description: form.description,
-      steps: form.steps?.map((step: any, stepIndex: number) => ({
-        id: `step-${stepIndex + 1}`,
-        title: step.title
-      })) || [],
-      questions: form.steps?.flatMap((step: any, stepIndex: number) => 
-        step.questions?.map((question: any, questionIndex: number) => ({
-          id: `question-${stepIndex}-${questionIndex}`,
-          text: question.label,
-          type: question.type === 'shortAnswer' ? 'short' : 
-                question.type === 'multipleChoice' ? 'multiple' : 
-                question.type,
-          required: question.required,
-          placeholder: question.placeholder,
-          options: question.options || [],
-          stepId: `step-${stepIndex + 1}`
-        })) || []
-      ) || [],
+      steps: form.steps || [],
+      questions: form.questions || [],
       createdAt: form.createdAt,
       updatedAt: form.updatedAt
     }
