@@ -164,30 +164,36 @@ export default function FormBuilder() {
               )}
 
               {/* Debug Info */}
-              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 mb-4">
                 <h3 className="mb-2 text-sm font-semibold text-blue-800">Debug Info:</h3>
                 <p className="text-xs text-blue-600">savedFormId: {savedFormId || "null"}</p>
                 <p className="text-xs text-blue-600">isSaving: {isSaving ? "true" : "false"}</p>
                 <p className="text-xs text-blue-600">saveError: {saveError || "null"}</p>
+                <button 
+                  onClick={() => setSavedFormId("test-form-123")}
+                  className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded"
+                >
+                  Test Success Message
+                </button>
               </div>
 
               {/* Saved Form Link */}
               {savedFormId && (
-                <div className="rounded-2xl border border-green-200 bg-green-50 p-6">
-                  <h3 className="mb-2 text-lg font-semibold text-green-800">Form Saved Successfully!</h3>
-                  <p className="mb-3 text-sm text-green-600">Share this link with others:</p>
+                <div className="rounded-2xl border-2 border-green-500 bg-green-100 p-6 mb-6 shadow-lg">
+                  <h3 className="mb-2 text-xl font-bold text-green-900">🎉 Form Saved Successfully!</h3>
+                  <p className="mb-3 text-sm text-green-700">Share this link with others:</p>
                   <div className="flex items-center gap-3">
                     <Input
                       readOnly
                       value={`${typeof window !== "undefined" ? window.location.origin : ""}/form/${savedFormId}`}
-                      className="flex-1 border-green-300 bg-white text-black"
+                      className="flex-1 border-green-400 bg-white text-black font-mono"
                     />
                     <Button
                       onClick={() => {
                         navigator.clipboard.writeText(`${window.location.origin}/form/${savedFormId}`)
                       }}
                       variant="outline"
-                      className="border-green-300 bg-transparent text-green-700 hover:bg-green-100"
+                      className="border-green-400 bg-green-200 text-green-800 hover:bg-green-300"
                     >
                       Copy Link
                     </Button>
