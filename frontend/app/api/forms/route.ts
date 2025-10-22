@@ -14,10 +14,10 @@ const connectDB = async () => {
   
   try {
     console.log("🔗 Attempting MongoDB Atlas connection...")
-    console.log("📍 MONGODB_URI:", process.env.MONGODB_URI ? "Set (Vercel MongoDB Atlas)" : "Not set")
+    console.log("📍 mongo_MONGODB_URI:", process.env.mongo_MONGODB_URI ? "Set (Vercel MongoDB Atlas)" : "Not set")
     
     // Connect to MongoDB Atlas using Vercel environment variable
-    await mongoose.connect(process.env.MONGODB_URI!, {
+    await mongoose.connect(process.env.mongo_MONGODB_URI!, {
       // MongoDB Atlas specific options
       maxPoolSize: 10, // Maintain up to 10 socket connections
       serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
@@ -81,12 +81,12 @@ export async function POST(request: NextRequest) {
     console.log("🔄 Starting form creation...")
     
     // Check if MongoDB URI is available
-    if (!process.env.MONGODB_URI) {
-      console.error("❌ MONGODB_URI environment variable not set")
+    if (!process.env.mongo_MONGODB_URI) {
+      console.error("❌ mongo_MONGODB_URI environment variable not set")
       return NextResponse.json({
         success: false,
         message: "Database configuration error",
-        error: "MONGODB_URI not configured"
+        error: "mongo_MONGODB_URI not configured"
       }, { status: 500 })
     }
 

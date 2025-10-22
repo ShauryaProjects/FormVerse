@@ -17,7 +17,7 @@ const connectDB = async () => {
     console.log("🔗 Attempting MongoDB Atlas connection...")
     
     // Connect to MongoDB Atlas using Vercel environment variable
-    await mongoose.connect(process.env.MONGODB_URI!, {
+    await mongoose.connect(process.env.mongo_MONGODB_URI!, {
       // MongoDB Atlas specific options
       maxPoolSize: 10, // Maintain up to 10 socket connections
       serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
