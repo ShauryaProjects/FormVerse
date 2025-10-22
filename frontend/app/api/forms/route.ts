@@ -94,6 +94,10 @@ export async function POST(request: NextRequest) {
     await connectDB()
     console.log("✅ MongoDB connected successfully")
     
+    // Log the actual environment variable value (first few chars for security)
+    const mongoUri = process.env.mongo_MONGODB_URI
+    console.log("🔍 MongoDB URI preview:", mongoUri ? `${mongoUri.substring(0, 20)}...` : "undefined")
+    
     const body = await request.json()
     console.log("📝 Form data received:", { title: body.title, stepsCount: body.steps?.length, questionsCount: body.questions?.length })
     
