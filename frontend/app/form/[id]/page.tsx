@@ -213,26 +213,28 @@ export default function FormViewPage() {
     return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-6 py-12 max-w-2xl">
-        {/* Form Header */}
-        <div className="mb-8 space-y-3">
-          <h1 className="text-3xl font-bold text-black md:text-4xl">{formData.title}</h1>
-          {formData.description && <p className="text-black/60 leading-relaxed">{formData.description}</p>}
-          {formData.steps.length > 1 && (
-            <div className="text-sm text-black/60 font-medium">
-              {currentStep?.title} ({currentStepIndex + 1} of {formData.steps.length})
-            </div>
-          )}
-        </div>
+        {/* Form Preview Container - Same styling as form builder preview */}
+        <div className="rounded-2xl bg-neutral-100 p-8 shadow-lg">
+          {/* Form Header */}
+          <div className="mb-8 space-y-3">
+            <h1 className="text-3xl font-bold text-black md:text-4xl">{formData.title}</h1>
+            {formData.description && <p className="text-black/60 leading-relaxed">{formData.description}</p>}
+            {formData.steps.length > 1 && (
+              <div className="text-sm text-black/60 font-medium">
+                {currentStep?.title} ({currentStepIndex + 1} of {formData.steps.length})
+              </div>
+            )}
+          </div>
 
-        {/* Questions */}
-        {currentStepQuestions.length > 0 ? (
-          <div className="space-y-8">
-            {currentStepQuestions.map((question, index) => (
-              <div key={question.id} className="space-y-3">
-                <Label className="text-base font-semibold text-black">
-                  {index + 1}. {question.text}
-                  {question.required && <span className="ml-1 text-red-600">*</span>}
-                </Label>
+          {/* Questions */}
+          {currentStepQuestions.length > 0 ? (
+            <div className="space-y-8">
+              {currentStepQuestions.map((question, index) => (
+                <div key={question.id} className="space-y-3">
+                  <Label className="text-base font-semibold text-black">
+                    {index + 1}. {question.text}
+                    {question.required && <span className="ml-1 text-red-600">*</span>}
+                  </Label>
 
                 {question.type === "short" && (
                   <Input
@@ -319,49 +321,50 @@ export default function FormViewPage() {
               </div>
             ))}
 
-            <div className="mt-8 flex items-center justify-between gap-4">
-              {formData.steps.length > 1 && !isFirstStep && (
-                <Button
-                  onClick={handlePreviousStep}
-                  variant="outline"
-                  className="border-black/20 bg-white text-black hover:bg-black hover:text-white transition-all duration-300"
-                >
-                  <ChevronLeft className="mr-2 h-4 w-4" />
-                  Previous
-                </Button>
-              )}
+              <div className="mt-8 flex items-center justify-between gap-4">
+                {formData.steps.length > 1 && !isFirstStep && (
+                  <Button
+                    onClick={handlePreviousStep}
+                    variant="outline"
+                    className="border-black/20 bg-white text-black hover:bg-black hover:text-white transition-all duration-300"
+                  >
+                    <ChevronLeft className="mr-2 h-4 w-4" />
+                    Previous
+                  </Button>
+                )}
 
-              {isLastStep ? (
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="ml-auto bg-black text-white hover:bg-black/90 transition-all duration-300 hover:scale-[1.02] py-6 px-8 text-base disabled:opacity-50"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    "Submit Form"
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleNextStep}
-                  className="ml-auto bg-black text-white hover:bg-black/90 transition-all duration-300 hover:scale-[1.02] py-6 px-8 text-base"
-                >
-                  Next Step
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              )}
+                {isLastStep ? (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="ml-auto bg-black text-white hover:bg-black/90 transition-all duration-300 hover:scale-[1.02] py-6 px-8 text-base disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      "Submit Form"
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleNextStep}
+                    className="ml-auto bg-black text-white hover:bg-black/90 transition-all duration-300 hover:scale-[1.02] py-6 px-8 text-base"
+                  >
+                    Next Step
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+          </div>
+          ) : (
+            <div className="py-12 text-center">
+              <p className="text-black/40 text-sm">This form has no questions.</p>
             </div>
-          </div>
-        ) : (
-          <div className="py-12 text-center">
-            <p className="text-black/40 text-sm">This form has no questions.</p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
     )
