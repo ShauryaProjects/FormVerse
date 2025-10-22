@@ -50,11 +50,7 @@ export default function AdminDashboardPage() {
     try {
       setIsLoading(true)
       setError(null)
-      const res = await fetch(
-        process.env.NEXT_PUBLIC_BACKEND_URL
-          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/forms`
-          : "/api/forms"
-      )
+      const res = await fetch("/api/forms")
       if (!res.ok) throw new Error("Failed to load forms")
       const response = await res.json()
       const data = response.data || response as FormItem[]
@@ -121,11 +117,7 @@ export default function AdminDashboardPage() {
     try {
       setIsLoading(true)
       setError(null)
-      const res = await fetch(
-        process.env.NEXT_PUBLIC_BACKEND_URL
-          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/forms/${form._id}/submissions`
-          : `/api/forms/${form._id}/submissions`
-      )
+      const res = await fetch(`/api/forms/${form._id}/submissions`)
       if (!res.ok) throw new Error("Failed to load submissions")
       const response = await res.json()
       const data = response.data?.submissions || response.submissions || response as SubmissionItem[]
@@ -147,12 +139,7 @@ export default function AdminDashboardPage() {
     try {
       setIsLoading(true)
       setError(null)
-      const res = await fetch(
-        process.env.NEXT_PUBLIC_BACKEND_URL
-          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/forms/${formId}`
-          : `/api/forms/${formId}`,
-        { method: "DELETE" }
-      )
+      const res = await fetch(`/api/forms/${formId}`, { method: "DELETE" })
       if (!res.ok) throw new Error("Failed to delete form")
       setForms((prev) => prev.filter((f) => f._id !== formId))
       if (selectedForm?._id === formId) handleBackToForms()

@@ -57,11 +57,7 @@ export default function FormBuilder() {
     setSaveError(null)
 
     try {
-      const response = await fetch(
-        typeof window !== "undefined" && process.env.NEXT_PUBLIC_BACKEND_URL
-          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/forms`
-          : "/api/forms",
-        {
+      const response = await fetch("/api/forms", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
