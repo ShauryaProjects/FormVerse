@@ -19,43 +19,6 @@ export async function GET() {
   }
 }
 
-// DELETE /api/forms - Delete a form by ID (for admin dashboard)
-export async function DELETE(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const formId = searchParams.get('id')
-
-    if (!formId) {
-      return NextResponse.json({
-        success: false,
-        message: "Form ID is required",
-      }, { status: 400 })
-    }
-
-    const deletedForm = deleteFormById(formId)
-    
-    if (!deletedForm) {
-      return NextResponse.json({
-        success: false,
-        message: "Form not found",
-      }, { status: 404 })
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: deletedForm,
-      message: "Form deleted successfully",
-    })
-  } catch (error) {
-    console.error("Error:", error)
-    return NextResponse.json({
-      success: false,
-      message: "Internal server error",
-      error: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
-    }, { status: 500 })
-  }
-}
-
 // POST /api/forms - Create a new form
 export async function POST(request: NextRequest) {
   try {
