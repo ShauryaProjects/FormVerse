@@ -62,13 +62,20 @@ export default function QuestionList({ questions, onQuestionsChange, stepId }: Q
         // Find the scrollable parent container
         const scrollContainer = newCard.closest('.overflow-y-auto')
         if (scrollContainer) {
+          // Calculate the position of the new card relative to the container
           const cardRect = newCard.getBoundingClientRect()
           const containerRect = scrollContainer.getBoundingClientRect()
-          const scrollTop = scrollContainer.scrollTop
-          const targetScrollTop = scrollTop + cardRect.top - containerRect.top - (containerRect.height / 2) + (cardRect.height / 2)
+          const currentScrollTop = scrollContainer.scrollTop
+          
+          // Calculate where the card is positioned within the scrollable content
+          const cardOffsetTop = newCard.offsetTop
+          const containerHeight = scrollContainer.clientHeight
+          
+          // Scroll to center the new card in the viewport
+          const targetScrollTop = cardOffsetTop - (containerHeight / 2) + (newCard.offsetHeight / 2)
           
           scrollContainer.scrollTo({
-            top: targetScrollTop,
+            top: Math.max(0, targetScrollTop),
             behavior: 'smooth'
           })
         } else {

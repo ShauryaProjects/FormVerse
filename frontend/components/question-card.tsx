@@ -49,16 +49,28 @@ export default function QuestionCard({ question, index, onUpdate, onDelete }: Qu
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newText = e.target.value
-    const cleanText = getCleanText(question.text)
+    const currentText = question.text
+    const cleanCurrentText = getCleanText(currentText)
     
-    // If formatting is active, apply it to the new text
-    if (isBold && isItalic) {
-      onUpdate(question.id, { text: `***${newText}***` })
-    } else if (isBold) {
-      onUpdate(question.id, { text: `**${newText}**` })
-    } else if (isItalic) {
-      onUpdate(question.id, { text: `*${newText}*` })
+    // If the new text is longer than clean current text, user is typing
+    if (newText.length > cleanCurrentText.length) {
+      const addedText = newText.slice(cleanCurrentText.length)
+      
+      // Apply formatting only to the newly added text
+      let formattedAddedText = addedText
+      if (isBold && isItalic) {
+        formattedAddedText = `***${addedText}***`
+      } else if (isBold) {
+        formattedAddedText = `**${addedText}**`
+      } else if (isItalic) {
+        formattedAddedText = `*${addedText}*`
+      }
+      
+      // Combine existing text with newly formatted text
+      const finalText = cleanCurrentText + formattedAddedText
+      onUpdate(question.id, { text: finalText })
     } else {
+      // User is deleting or editing existing text
       onUpdate(question.id, { text: newText })
     }
   }
