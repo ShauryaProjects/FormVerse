@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { gsap } from "gsap"
-import { LayoutGrid, FileText, Settings as SettingsIcon, LogOut, RefreshCw } from "lucide-react"
+import { LayoutGrid, FileText, Settings as SettingsIcon, LogOut, RefreshCw, Share2, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -40,6 +40,7 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<{ totalForms: number; totalSubmissions?: number; activeUsers?: number }>({
     totalForms: 0,
   })
+  const [copiedFormId, setCopiedFormId] = useState<string | null>(null)
 
   const mainRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
@@ -115,7 +116,6 @@ export default function AdminDashboardPage() {
 
   const handleViewSubmissions = async (form: FormItem) => {
     try {
-      setIsLoading(true)
       setError(null)
       const res = await fetch(`/api/forms/${form._id}/submissions`)
       if (!res.ok) throw new Error("Failed to load submissions")
@@ -125,8 +125,6 @@ export default function AdminDashboardPage() {
       setSelectedForm(form)
     } catch (e: any) {
       setError(e?.message ?? "Unknown error")
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -137,7 +135,6 @@ export default function AdminDashboardPage() {
 
   const handleDeleteForm = async (formId: string) => {
     try {
-      setIsLoading(true)
       setError(null)
       const res = await fetch(`/api/forms?id=${formId}`, { method: "DELETE" })
       if (!res.ok) throw new Error("Failed to delete form")
@@ -145,8 +142,18 @@ export default function AdminDashboardPage() {
       if (selectedForm?._id === formId) handleBackToForms()
     } catch (e: any) {
       setError(e?.message ?? "Unknown error")
-    } finally {
-      setIsLoading(false)
+    }
+  }
+
+  const handleShareForm = async (formId: string) => {
+    const formUrl = `${window.location.origin}/form/${formId}`
+    try {
+      await navigator.clipboard.writeText(formUrl)
+      setCopiedFormId(formId)
+      toast.success("Form link copied to clipboard!")
+      setTimeout(() => setCopiedFormId(null), 2000)
+    } catch (err) {
+      toast.error("Failed to copy link")
     }
   }
 
@@ -297,9 +304,26 @@ export default function AdminDashboardPage() {
                         Created {new Date(form.createdAt).toLocaleString()}
                       </div>
                     </div>
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
                       <Button onClick={() => handleViewSubmissions(form)} className="h-9 px-3 bg-blue-600 hover:bg-blue-700">
                         View Submissions
+                      </Button>
+                      <Button 
+                        onClick={() => handleShareForm(form._id)}
+                        variant="outline" 
+                        className="h-9 px-3 border-green-200 text-green-700 hover:bg-green-50"
+                      >
+                        {copiedFormId === form._id ? (
+                          <>
+                            <Check className="h-4 w-4 mr-1" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Share2 className="h-4 w-4 mr-1" />
+                            Share
+                          </>
+                        )}
                       </Button>
                       <Button variant="outline" className="h-9 px-3 border-blue-200 text-blue-700 hover:bg-blue-50">
                         Edit
@@ -338,17 +362,12 @@ export default function AdminDashboardPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-black/10 bg-white">
-                        {isLoading && (
-                          <tr>
-                            <Td colSpan={3}>Loading submissions...</Td>
-                          </tr>
-                        )}
                         {error && (
                           <tr>
                             <Td colSpan={3}>{error}</Td>
                           </tr>
                         )}
-                        {!isLoading && !error && submissions.length === 0 && (
+                        {!error && submissions.length === 0 && (
                           <tr>
                             <Td colSpan={3}>No submissions yet</Td>
                           </tr>
