@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -48,30 +48,77 @@ export default function QuestionCard({ question, index, onUpdate, onDelete }: Qu
   }
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let newText = e.target.value
-    
-    // Apply formatting based on current state
-    if (isBold && isItalic) {
-      // If both are active, wrap with both tags
-      newText = `***${newText}***`
-    } else if (isBold) {
-      newText = `**${newText}**`
-    } else if (isItalic) {
-      newText = `*${newText}*`
-    }
-    
+    const newText = e.target.value
     onUpdate(question.id, { text: newText })
   }
 
+  const applyFormatting = (text: string) => {
+    if (isBold && isItalic) {
+      return `***${text}***`
+    } else if (isBold) {
+      return `**${text}**`
+    } else if (isItalic) {
+      return `*${text}*`
+    }
+    return text
+  }
+
   const toggleBold = () => {
-    setIsBold(!isBold)
-    setIsItalic(false) // Turn off italic when bold is toggled
+    const currentText = question.text
+    // Remove existing formatting
+    const cleanText = currentText.replace(/\*\*\*(.*?)\*\*\*/g, '$1').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
+    
+    if (isBold) {
+      // Turn off bold
+      onUpdate(question.id, { text: cleanText })
+      setIsBold(false)
+    } else {
+      // Turn on bold
+      onUpdate(question.id, { text: `**${cleanText}**` })
+      setIsBold(true)
+      setIsItalic(false)
+    }
   }
 
   const toggleItalic = () => {
-    setIsItalic(!isItalic)
-    setIsBold(false) // Turn off bold when italic is toggled
+    const currentText = question.text
+    // Remove existing formatting
+    const cleanText = currentText.replace(/\*\*\*(.*?)\*\*\*/g, '$1').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
+    
+    if (isItalic) {
+      // Turn off italic
+      onUpdate(question.id, { text: cleanText })
+      setIsItalic(false)
+    } else {
+      // Turn on italic
+      onUpdate(question.id, { text: `*${cleanText}*` })
+      setIsItalic(true)
+      setIsBold(false)
+    }
   }
+
+  // Get clean text without formatting symbols for display in input
+  const getCleanText = (text: string) => {
+    return text.replace(/\*\*\*(.*?)\*\*\*/g, '$1').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
+  }
+
+  // Detect formatting state from text
+  useEffect(() => {
+    const text = question.text
+    if (text.includes('***') && text.match(/\*\*\*.*\*\*\*/)) {
+      setIsBold(true)
+      setIsItalic(true)
+    } else if (text.includes('**') && text.match(/\*\*.*\*\*/)) {
+      setIsBold(true)
+      setIsItalic(false)
+    } else if (text.includes('*') && text.match(/\*.*\*/)) {
+      setIsBold(false)
+      setIsItalic(true)
+    } else {
+      setIsBold(false)
+      setIsItalic(false)
+    }
+  }, [question.text])
 
   return (
     <div
@@ -109,7 +156,7 @@ export default function QuestionCard({ question, index, onUpdate, onDelete }: Qu
           <Input
             id={`question-${question.id}`}
             placeholder="Enter your question..."
-            value={question.text}
+            value={getCleanText(question.text)}
             onChange={handleTextChange}
             className="h-8 text-sm border-black/20 bg-white text-black placeholder:text-black/40"
           />

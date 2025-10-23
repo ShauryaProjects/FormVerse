@@ -158,9 +158,9 @@ export default function FormBuilder() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[15%_50%_35%] gap-0 h-[calc(100vh-8rem)]">
-          {/* Left Column: Steps Panel (15%) */}
-          <div className="overflow-y-auto pr-4 border-r border-black/10">
+        <div className="grid grid-cols-1 lg:grid-cols-[12%_48%_40%] gap-0 h-[calc(100vh-8rem)]">
+          {/* Left Column: Steps Panel (12%) */}
+          <div className="overflow-y-auto pr-3 border-r border-black/10">
             <StepsPanel
               steps={steps}
               activeStepId={activeStepId}
@@ -172,8 +172,8 @@ export default function FormBuilder() {
             />
           </div>
 
-          {/* Middle Column: Form Builder (50%) */}
-          <div className="overflow-y-auto px-4 border-r border-black/10">
+          {/* Middle Column: Form Builder (48%) */}
+          <div className="overflow-y-auto px-3 border-r border-black/10">
             <div className="space-y-8">
               {/* Form Settings */}
               <FormSettings
@@ -214,8 +214,8 @@ export default function FormBuilder() {
             </div>
           </div>
 
-          {/* Right Column: Live Preview (35%) - hidden on mobile */}
-          <div className="overflow-y-auto pl-4 hidden lg:block">
+          {/* Right Column: Live Preview (40%) - hidden on mobile */}
+          <div className="overflow-y-auto pl-3 hidden lg:block">
             <div className="sticky top-0 mb-4 pb-4 bg-white/80 backdrop-blur-sm border-b border-black/10">
               <h2 className="text-lg font-semibold text-black">Preview</h2>
               <p className="text-sm text-black/60">

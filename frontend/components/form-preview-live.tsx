@@ -107,11 +107,15 @@ export default function FormPreviewLive({ formData, activeStepId, steps, onStepC
   return (
     <div ref={containerRef} className="space-y-8">
       {/* Form Header and Auth Section - Black Background */}
-      <div className="rounded-2xl bg-black p-8 shadow-lg">
+      <div className="rounded-2xl bg-black p-6 shadow-lg">
         {/* Form Header */}
         <div className="mb-4 space-y-2">
           <h1 className="text-2xl font-bold text-white md:text-3xl">{formData.title || "Untitled Form"}</h1>
-          {formData.description && <p className="text-sm text-white/80 leading-relaxed">{formData.description}</p>}
+          {formData.description && (
+            <div className="text-sm text-white/80 leading-relaxed whitespace-pre-line">
+              {formData.description}
+            </div>
+          )}
           {steps.length > 1 && (
             <div className="text-xs text-white/70 font-medium">
               {steps[currentStepIndex]?.title} ({currentStepIndex + 1} of {steps.length})

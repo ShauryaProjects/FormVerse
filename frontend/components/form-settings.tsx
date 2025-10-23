@@ -47,8 +47,8 @@ export default function FormSettings({ title, description, onTitleChange, onDesc
             placeholder="Enter form description..."
             value={description}
             onChange={(e) => onDescriptionChange(e.target.value)}
-            rows={3}
-            className="text-sm border-black/20 bg-white text-black placeholder:text-black/40 resize-none"
+            rows={Math.max(2, description.split('\n').length)}
+            className="text-sm border-black/20 bg-white text-black placeholder:text-black/40 resize-none min-h-[2.5rem]"
           />
         </div>
       </div>

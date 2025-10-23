@@ -299,16 +299,20 @@ export default function FormViewPage() {
       <div className="container mx-auto px-6 py-12 max-w-2xl">
         {/* Form Header and Auth Section - Black Background */}
         <div className="rounded-2xl bg-black p-8 shadow-lg mb-8">
-          {/* Form Header */}
-          <div className="mb-6 space-y-3">
-            <h1 className="text-3xl font-bold text-white md:text-4xl">{formData.title}</h1>
-            {formData.description && <p className="text-white/80 leading-relaxed">{formData.description}</p>}
-            {formData.steps.length > 1 && (
-              <div className="text-sm text-white/70 font-medium">
-                {currentStep?.title} ({currentStepIndex + 1} of {formData.steps.length})
-              </div>
-            )}
-          </div>
+        {/* Form Header */}
+        <div className="mb-6 space-y-3">
+          <h1 className="text-3xl font-bold text-white md:text-4xl">{formData.title}</h1>
+          {formData.description && (
+            <div className="text-white/80 leading-relaxed whitespace-pre-line">
+              {formData.description}
+            </div>
+          )}
+          {formData.steps.length > 1 && (
+            <div className="text-sm text-white/70 font-medium">
+              {currentStep?.title} ({currentStepIndex + 1} of {formData.steps.length})
+            </div>
+          )}
+        </div>
 
           {/* Dark Grey Separator Line */}
           <div className="border-t border-gray-600 mb-6"></div>
