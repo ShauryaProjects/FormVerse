@@ -49,7 +49,18 @@ export default function QuestionCard({ question, index, onUpdate, onDelete }: Qu
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newText = e.target.value
-    onUpdate(question.id, { text: newText })
+    const cleanText = getCleanText(question.text)
+    
+    // If formatting is active, apply it to the new text
+    if (isBold && isItalic) {
+      onUpdate(question.id, { text: `***${newText}***` })
+    } else if (isBold) {
+      onUpdate(question.id, { text: `**${newText}**` })
+    } else if (isItalic) {
+      onUpdate(question.id, { text: `*${newText}*` })
+    } else {
+      onUpdate(question.id, { text: newText })
+    }
   }
 
   const applyFormatting = (text: string) => {
@@ -64,34 +75,22 @@ export default function QuestionCard({ question, index, onUpdate, onDelete }: Qu
   }
 
   const toggleBold = () => {
-    const currentText = question.text
-    // Remove existing formatting
-    const cleanText = currentText.replace(/\*\*\*(.*?)\*\*\*/g, '$1').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
-    
     if (isBold) {
       // Turn off bold
-      onUpdate(question.id, { text: cleanText })
       setIsBold(false)
     } else {
       // Turn on bold
-      onUpdate(question.id, { text: `**${cleanText}**` })
       setIsBold(true)
       setIsItalic(false)
     }
   }
 
   const toggleItalic = () => {
-    const currentText = question.text
-    // Remove existing formatting
-    const cleanText = currentText.replace(/\*\*\*(.*?)\*\*\*/g, '$1').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
-    
     if (isItalic) {
       // Turn off italic
-      onUpdate(question.id, { text: cleanText })
       setIsItalic(false)
     } else {
       // Turn on italic
-      onUpdate(question.id, { text: `*${cleanText}*` })
       setIsItalic(true)
       setIsBold(false)
     }

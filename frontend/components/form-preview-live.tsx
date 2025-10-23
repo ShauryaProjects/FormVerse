@@ -110,9 +110,9 @@ export default function FormPreviewLive({ formData, activeStepId, steps, onStepC
       <div className="rounded-2xl bg-black p-6 shadow-lg">
         {/* Form Header */}
         <div className="mb-4 space-y-2">
-          <h1 className="text-2xl font-bold text-white md:text-3xl">{formData.title || "Untitled Form"}</h1>
+          <h1 className="text-2xl font-bold text-white md:text-3xl break-words overflow-wrap-anywhere">{formData.title || "Untitled Form"}</h1>
           {formData.description && (
-            <div className="text-sm text-white/80 leading-relaxed whitespace-pre-line">
+            <div className="text-sm text-white/80 leading-relaxed whitespace-pre-line break-words overflow-wrap-anywhere">
               {formData.description}
             </div>
           )}

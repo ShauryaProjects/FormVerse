@@ -59,7 +59,22 @@ export default function QuestionList({ questions, onQuestionsChange, stepId }: Q
     setTimeout(() => {
       const newCard = listRef.current?.lastElementChild
       if (newCard) {
-        newCard.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        // Find the scrollable parent container
+        const scrollContainer = newCard.closest('.overflow-y-auto')
+        if (scrollContainer) {
+          const cardRect = newCard.getBoundingClientRect()
+          const containerRect = scrollContainer.getBoundingClientRect()
+          const scrollTop = scrollContainer.scrollTop
+          const targetScrollTop = scrollTop + cardRect.top - containerRect.top - (containerRect.height / 2) + (cardRect.height / 2)
+          
+          scrollContainer.scrollTo({
+            top: targetScrollTop,
+            behavior: 'smooth'
+          })
+        } else {
+          // Fallback to default scrollIntoView
+          newCard.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
         
         gsap.fromTo(
           newCard,
@@ -67,7 +82,7 @@ export default function QuestionList({ questions, onQuestionsChange, stepId }: Q
           { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.7)" },
         )
       }
-    }, 50)
+    }, 100)
   }
 
   const updateQuestion = (id: string, updates: Partial<Question>) => {

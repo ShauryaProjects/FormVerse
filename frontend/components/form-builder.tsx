@@ -158,8 +158,8 @@ export default function FormBuilder() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[12%_48%_40%] gap-0 h-[calc(100vh-8rem)]">
-          {/* Left Column: Steps Panel (12%) */}
+        <div className="grid grid-cols-1 lg:grid-cols-[18%_42%_40%] gap-0 h-[calc(100vh-8rem)]">
+          {/* Left Column: Steps Panel (18%) */}
           <div className="overflow-y-auto pr-3 border-r border-black/10">
             <StepsPanel
               steps={steps}
@@ -172,7 +172,7 @@ export default function FormBuilder() {
             />
           </div>
 
-          {/* Middle Column: Form Builder (48%) */}
+          {/* Middle Column: Form Builder (42%) */}
           <div className="overflow-y-auto px-3 border-r border-black/10">
             <div className="space-y-8">
               {/* Form Settings */}

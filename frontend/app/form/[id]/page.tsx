@@ -301,9 +301,9 @@ export default function FormViewPage() {
         <div className="rounded-2xl bg-black p-8 shadow-lg mb-8">
         {/* Form Header */}
         <div className="mb-6 space-y-3">
-          <h1 className="text-3xl font-bold text-white md:text-4xl">{formData.title}</h1>
+          <h1 className="text-3xl font-bold text-white md:text-4xl break-words overflow-wrap-anywhere">{formData.title}</h1>
           {formData.description && (
-            <div className="text-white/80 leading-relaxed whitespace-pre-line">
+            <div className="text-white/80 leading-relaxed whitespace-pre-line break-words overflow-wrap-anywhere">
               {formData.description}
             </div>
           )}
