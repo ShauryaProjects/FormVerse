@@ -68,8 +68,7 @@ export default function FormBuilder() {
           questions: formData.questions,
           steps: formData.steps,
         }),
-        }
-      )
+      })
 
       if (!response.ok) {
         throw new Error("Failed to save form")
