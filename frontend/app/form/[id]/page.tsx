@@ -48,6 +48,7 @@ export default function FormViewPage() {
   const [formResponses, setFormResponses] = useState<Record<string, any>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [selectedEmail, setSelectedEmail] = useState<string>("")
 
   useEffect(() => {
     const fetchForm = async () => {
@@ -152,6 +153,7 @@ export default function FormViewPage() {
         },
         body: JSON.stringify({
           responses: formResponses,
+          email: selectedEmail || null,
           formId: formData._id,
         }),
       })
@@ -238,6 +240,19 @@ export default function FormViewPage() {
                 {currentStep?.title} ({currentStepIndex + 1} of {formData.steps.length})
               </div>
             )}
+          </div>
+
+          {/* Email selection before questions */}
+          <div className="mb-8 space-y-3">
+            <Label className="text-base font-semibold text-black">Select your Gmail account</Label>
+            <Input
+              type="email"
+              placeholder="yourname@gmail.com"
+              className="border-black/20 bg-white text-black"
+              value={selectedEmail}
+              onChange={(e) => setSelectedEmail(e.target.value)}
+            />
+            <p className="text-xs text-black/50">This email will be shown in the responses.</p>
           </div>
 
           {/* Questions */}

@@ -6,6 +6,10 @@ const submissionSchema = new mongoose.Schema({
     ref: "Form",
     required: true,
   },
+  email: {
+    type: String,
+    trim: true,
+  },
   responses: {
     type: Object,
     required: true,

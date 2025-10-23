@@ -60,6 +60,7 @@ export async function POST(
     // Create new submission
     const newSubmission = new Submission({
       formId: id,
+      email: body.email || null,
       responses: body.responses || {},
     })
 
