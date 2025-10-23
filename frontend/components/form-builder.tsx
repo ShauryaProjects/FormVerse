@@ -30,15 +30,20 @@ export interface FormData {
   steps: Step[] // Added steps array
 }
 
-export default function FormBuilder() {
-  const [steps, setSteps] = useState<Step[]>([{ id: "step-1", title: "Step 1" }])
-  const [activeStepId, setActiveStepId] = useState<string>("step-1")
+interface FormBuilderProps {
+  initialFormData?: FormData | null
+  formId?: string | null
+}
+
+export default function FormBuilder({ initialFormData, formId }: FormBuilderProps = {}) {
+  const [steps, setSteps] = useState<Step[]>(initialFormData?.steps || [{ id: "step-1", title: "Step 1" }])
+  const [activeStepId, setActiveStepId] = useState<string>(initialFormData?.steps?.[0]?.id || "step-1")
 
   const [formData, setFormData] = useState<FormData>({
-    title: "",
-    description: "",
-    questions: [],
-    steps: [{ id: "step-1", title: "Step 1" }],
+    title: initialFormData?.title || "",
+    description: initialFormData?.description || "",
+    questions: initialFormData?.questions || [],
+    steps: initialFormData?.steps || [{ id: "step-1", title: "Step 1" }],
   })
   const [savedFormId, setSavedFormId] = useState<string | null>(null)
   const [isPreviewOpen, setPreviewOpen] = useState(false)
@@ -58,8 +63,11 @@ export default function FormBuilder() {
     setSaveError(null)
 
     try {
-      const response = await fetch("/api/forms", {
-        method: "POST",
+      const url = formId ? `/api/forms/${formId}` : "/api/forms"
+      const method = formId ? "PUT" : "POST"
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -79,12 +87,12 @@ export default function FormBuilder() {
       console.log("Full API response:", savedForm)
       
       // Handle different response structures
-      const formId = savedForm.data?._id || savedForm._id || savedForm.data?.id || savedForm.id
-      console.log("Extracted form ID:", formId)
+      const newFormId = savedForm.data?._id || savedForm._id || savedForm.data?.id || savedForm.id
+      console.log("Extracted form ID:", newFormId)
       
-      if (formId) {
-        setSavedFormId(formId)
-        console.log("Form saved successfully with ID:", formId)
+      if (newFormId) {
+        setSavedFormId(newFormId)
+        console.log("Form saved successfully with ID:", newFormId)
       } else {
         console.error("No form ID found in response:", savedForm)
         setSaveError("Form saved but no ID returned")
@@ -198,19 +206,6 @@ export default function FormBuilder() {
                 </div>
               )}
 
-              {/* Debug Info */}
-              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 mb-4">
-                <h3 className="mb-2 text-sm font-semibold text-blue-800">Debug Info:</h3>
-                <p className="text-xs text-blue-600">savedFormId: {savedFormId || "null"}</p>
-                <p className="text-xs text-blue-600">isSaving: {isSaving ? "true" : "false"}</p>
-                <p className="text-xs text-blue-600">saveError: {saveError || "null"}</p>
-                <button 
-                  onClick={() => setSavedFormId("test-form-123")}
-                  className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded"
-                >
-                  Test Success Message
-                </button>
-                  </div>
             </div>
           </div>
 

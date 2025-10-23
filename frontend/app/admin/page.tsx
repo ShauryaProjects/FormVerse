@@ -178,6 +178,11 @@ export default function AdminDashboardPage() {
     }
   }
 
+  const handleEditForm = (form: FormItem) => {
+    // Navigate to builder with form ID
+    window.location.href = `/builder?id=${form._id}`
+  }
+
   const handleLogout = () => 
     signOut(auth)
       .then(() => {
@@ -346,7 +351,11 @@ export default function AdminDashboardPage() {
                           </>
                         )}
                       </Button>
-                      <Button variant="outline" className="h-9 px-3 border-blue-200 text-blue-700 bg-white hover:bg-blue-700 hover:text-white hover:border-blue-700">
+                      <Button 
+                        variant="outline" 
+                        className="h-9 px-3 border-blue-200 text-blue-700 bg-white hover:bg-blue-700 hover:text-white hover:border-blue-700"
+                        onClick={() => handleEditForm(form)}
+                      >
                         Edit
                       </Button>
                       <Button

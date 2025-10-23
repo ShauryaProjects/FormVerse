@@ -30,19 +30,13 @@ export default function FormPreviewLive({ formData, activeStepId, steps, onStepC
   const isLastStep = currentStepIndex === steps.length - 1
 
   const renderFormattedText = (text: string) => {
-    // Simple markdown-like formatting for bold and italic
-    let formattedText = text
+    // If the text is already HTML (contains HTML tags), use it directly
+    if (text.includes('<') && text.includes('>')) {
+      return <span dangerouslySetInnerHTML={{ __html: text }} />
+    }
     
-    // Handle bold and italic combined (***text***)
-    formattedText = formattedText.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
-    
-    // Handle bold (**text**)
-    formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    
-    // Handle italic (*text*)
-    formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>')
-    
-    return <span dangerouslySetInnerHTML={{ __html: formattedText }} />
+    // Fallback for plain text
+    return <span>{text}</span>
   }
 
   useEffect(() => {
@@ -136,8 +130,8 @@ export default function FormPreviewLive({ formData, activeStepId, steps, onStepC
                 </svg>
               </div>
               <div>
-                <p className="text-xs font-medium text-white">John Doe</p>
-                <p className="text-xs text-white/70">john.doe@gmail.com</p>
+                <p className="text-xs font-medium text-white">Your Name</p>
+                <p className="text-xs text-white/70">hey@gmail.com</p>
               </div>
             </div>
             <Button

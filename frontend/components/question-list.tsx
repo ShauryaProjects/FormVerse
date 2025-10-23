@@ -55,32 +55,21 @@ export default function QuestionList({ questions, onQuestionsChange, stepId }: Q
     }
     onQuestionsChange([...questions, newQuestion])
 
-    // Auto-scroll to the new question
+    // Auto-scroll completely down to the new question
     setTimeout(() => {
       const newCard = listRef.current?.lastElementChild
       if (newCard) {
         // Find the scrollable parent container
         const scrollContainer = newCard.closest('.overflow-y-auto')
         if (scrollContainer) {
-          // Calculate the position of the new card relative to the container
-          const cardRect = newCard.getBoundingClientRect()
-          const containerRect = scrollContainer.getBoundingClientRect()
-          const currentScrollTop = scrollContainer.scrollTop
-          
-          // Calculate where the card is positioned within the scrollable content
-          const cardOffsetTop = newCard.offsetTop
-          const containerHeight = scrollContainer.clientHeight
-          
-          // Scroll to center the new card in the viewport
-          const targetScrollTop = cardOffsetTop - (containerHeight / 2) + (newCard.offsetHeight / 2)
-          
+          // Scroll completely to the bottom to show the new question
           scrollContainer.scrollTo({
-            top: Math.max(0, targetScrollTop),
+            top: scrollContainer.scrollHeight,
             behavior: 'smooth'
           })
         } else {
-          // Fallback to default scrollIntoView
-          newCard.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          // Fallback to scroll into view at the end
+          newCard.scrollIntoView({ behavior: 'smooth', block: 'end' })
         }
         
         gsap.fromTo(

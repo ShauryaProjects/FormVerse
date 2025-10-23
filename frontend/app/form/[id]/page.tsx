@@ -98,19 +98,13 @@ export default function FormViewPage() {
   }
 
   const renderFormattedText = (text: string) => {
-    // Simple markdown-like formatting for bold and italic
-    let formattedText = text
+    // If the text is already HTML (contains HTML tags), use it directly
+    if (text.includes('<') && text.includes('>')) {
+      return <span dangerouslySetInnerHTML={{ __html: text }} />
+    }
     
-    // Handle bold and italic combined (***text***)
-    formattedText = formattedText.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
-    
-    // Handle bold (**text**)
-    formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    
-    // Handle italic (*text*)
-    formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>')
-    
-    return <span dangerouslySetInnerHTML={{ __html: formattedText }} />
+    // Fallback for plain text
+    return <span>{text}</span>
   }
 
   useEffect(() => {
