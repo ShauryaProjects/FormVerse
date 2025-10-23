@@ -1,11 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { GripVertical, Trash2, Plus, X } from "lucide-react"
+import { GripVertical, Trash2, Plus, X, Bold, Italic } from "lucide-react"
 import type { Question, QuestionType } from "./form-builder"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
@@ -19,6 +20,8 @@ interface QuestionCardProps {
 
 export default function QuestionCard({ question, index, onUpdate, onDelete }: QuestionCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: question.id })
+  const [isBold, setIsBold] = useState(false)
+  const [isItalic, setIsItalic] = useState(false)
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -44,51 +47,98 @@ export default function QuestionCard({ question, index, onUpdate, onDelete }: Qu
     onUpdate(question.id, { options })
   }
 
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let newText = e.target.value
+    
+    // Apply formatting based on current state
+    if (isBold && isItalic) {
+      // If both are active, wrap with both tags
+      newText = `***${newText}***`
+    } else if (isBold) {
+      newText = `**${newText}**`
+    } else if (isItalic) {
+      newText = `*${newText}*`
+    }
+    
+    onUpdate(question.id, { text: newText })
+  }
+
+  const toggleBold = () => {
+    setIsBold(!isBold)
+    setIsItalic(false) // Turn off italic when bold is toggled
+  }
+
+  const toggleItalic = () => {
+    setIsItalic(!isItalic)
+    setIsBold(false) // Turn off bold when italic is toggled
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       data-question-id={question.id}
-      className="rounded-2xl border border-white/10 bg-white p-6 shadow-2xl"
+      className="rounded-xl border border-white/10 bg-white p-4 shadow-lg"
     >
-      <div className="mb-4 flex items-start justify-between">
-        <div className="flex items-center gap-3">
+      <div className="mb-3 flex items-start justify-between">
+        <div className="flex items-center gap-2">
           <button
             {...attributes}
             {...listeners}
             className="cursor-grab touch-none text-black/40 hover:text-black transition-colors active:cursor-grabbing"
           >
-            <GripVertical className="h-5 w-5" />
+            <GripVertical className="h-4 w-4" />
           </button>
-          <span className="text-sm font-semibold text-black">Question {index + 1}</span>
+          <span className="text-xs font-semibold text-black">Q{index + 1}</span>
         </div>
         <Button
           onClick={() => onDelete(question.id)}
           variant="ghost"
           size="icon"
-          className="text-black/40 hover:text-red-600 hover:bg-red-50"
+          className="h-6 w-6 text-black/40 hover:text-red-600 hover:bg-red-50"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-3 w-3" />
         </Button>
       </div>
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor={`question-${question.id}`} className="text-black">
+      <div className="space-y-3">
+        <div className="space-y-1">
+          <Label htmlFor={`question-${question.id}`} className="text-sm text-black">
             Question Text
           </Label>
           <Input
             id={`question-${question.id}`}
             placeholder="Enter your question..."
             value={question.text}
-            onChange={(e) => onUpdate(question.id, { text: e.target.value })}
-            className="border-black/20 bg-white text-black placeholder:text-black/40"
+            onChange={handleTextChange}
+            className="h-8 text-sm border-black/20 bg-white text-black placeholder:text-black/40"
           />
+          {/* Formatting buttons */}
+          <div className="flex items-center gap-1 mt-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={toggleBold}
+              className={`h-6 w-6 p-0 ${isBold ? 'bg-gray-200 hover:bg-gray-300' : 'hover:bg-gray-100'}`}
+            >
+              <Bold className="h-3 w-3" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={toggleItalic}
+              className={`h-6 w-6 p-0 ${isItalic ? 'bg-gray-200 hover:bg-gray-300' : 'hover:bg-gray-100'}`}
+            >
+              <Italic className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1">
           <div className="flex items-center justify-between gap-3">
-            <Label htmlFor={`type-${question.id}`} className="text-black">
+            <Label htmlFor={`type-${question.id}`} className="text-sm text-black">
               Question Type
             </Label>
             <div className="flex items-center gap-2">
@@ -116,7 +166,7 @@ export default function QuestionCard({ question, index, onUpdate, onDelete }: Qu
               onUpdate(question.id, updates)
             }}
           >
-            <SelectTrigger className="border-black/20 bg-white text-black">
+            <SelectTrigger className="h-8 text-sm border-black/20 bg-white text-black">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -130,24 +180,24 @@ export default function QuestionCard({ question, index, onUpdate, onDelete }: Qu
         </div>
 
         {hasOptions && (
-          <div className="space-y-3">
-            <Label className="text-black">Options</Label>
-            <div className="space-y-2">
+          <div className="space-y-2">
+            <Label className="text-sm text-black">Options</Label>
+            <div className="space-y-1">
               {question.options?.map((option, optionIndex) => (
                 <div key={optionIndex} className="flex items-center gap-2">
                   <Input
                     placeholder={`Option ${optionIndex + 1}`}
                     value={option}
                     onChange={(e) => updateOption(optionIndex, e.target.value)}
-                    className="flex-1 border-black/20 bg-white text-black placeholder:text-black/40"
+                    className="h-7 text-sm flex-1 border-black/20 bg-white text-black placeholder:text-black/40"
                   />
                   <Button
                     onClick={() => removeOption(optionIndex)}
                     variant="ghost"
                     size="icon"
-                    className="text-black/40 hover:text-red-600 hover:bg-red-50"
+                    className="h-6 w-6 text-black/40 hover:text-red-600 hover:bg-red-50"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3 w-3" />
                   </Button>
                 </div>
               ))}
@@ -156,16 +206,16 @@ export default function QuestionCard({ question, index, onUpdate, onDelete }: Qu
               onClick={addOption}
               variant="outline"
               size="sm"
-              className="border-black/20 bg-transparent text-black hover:bg-black/5"
+              className="h-7 text-xs border-black/20 bg-transparent text-black hover:bg-black/5"
             >
-              <Plus className="mr-2 h-3 w-3" />
+              <Plus className="mr-1 h-3 w-3" />
               Add Option
             </Button>
           </div>
         )}
 
-        <div className="space-y-2">
-          <Label htmlFor={`placeholder-${question.id}`} className="text-black">
+        <div className="space-y-1">
+          <Label htmlFor={`placeholder-${question.id}`} className="text-sm text-black">
             Placeholder
           </Label>
           <Input
@@ -173,7 +223,7 @@ export default function QuestionCard({ question, index, onUpdate, onDelete }: Qu
             placeholder="Enter a placeholder shown in the input"
             value={question.placeholder ?? ""}
             onChange={(e) => onUpdate(question.id, { placeholder: e.target.value })}
-            className="border-black/20 bg-white text-black placeholder:text-black/40"
+            className="h-8 text-sm border-black/20 bg-white text-black placeholder:text-black/40"
           />
         </div>
       </div>

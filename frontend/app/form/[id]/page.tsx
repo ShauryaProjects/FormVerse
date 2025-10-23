@@ -97,6 +97,22 @@ export default function FormViewPage() {
     }
   }
 
+  const renderFormattedText = (text: string) => {
+    // Simple markdown-like formatting for bold and italic
+    let formattedText = text
+    
+    // Handle bold and italic combined (***text***)
+    formattedText = formattedText.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    
+    // Handle bold (**text**)
+    formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    
+    // Handle italic (*text*)
+    formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>')
+    
+    return <span dangerouslySetInnerHTML={{ __html: formattedText }} />
+  }
+
   useEffect(() => {
     const fetchForm = async () => {
       try {
@@ -350,7 +366,7 @@ export default function FormViewPage() {
               {currentStepQuestions.map((question, index) => (
                 <div key={question.id} className="space-y-3">
                   <Label className="text-base font-semibold text-black">
-                    {index + 1}. {question.text}
+                    {index + 1}. {renderFormattedText(question.text)}
                     {question.required && <span className="ml-1 text-red-600">*</span>}
                   </Label>
 

@@ -29,6 +29,22 @@ export default function FormPreviewLive({ formData, activeStepId, steps, onStepC
   const isFirstStep = currentStepIndex === 0
   const isLastStep = currentStepIndex === steps.length - 1
 
+  const renderFormattedText = (text: string) => {
+    // Simple markdown-like formatting for bold and italic
+    let formattedText = text
+    
+    // Handle bold and italic combined (***text***)
+    formattedText = formattedText.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    
+    // Handle bold (**text**)
+    formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    
+    // Handle italic (*text*)
+    formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>')
+    
+    return <span dangerouslySetInnerHTML={{ __html: formattedText }} />
+  }
+
   useEffect(() => {
     if (!containerRef.current) return
 
@@ -93,37 +109,37 @@ export default function FormPreviewLive({ formData, activeStepId, steps, onStepC
       {/* Form Header and Auth Section - Black Background */}
       <div className="rounded-2xl bg-black p-8 shadow-lg">
         {/* Form Header */}
-        <div className="mb-6 space-y-3">
-          <h1 className="text-3xl font-bold text-white md:text-4xl">{formData.title || "Untitled Form"}</h1>
-          {formData.description && <p className="text-white/80 leading-relaxed">{formData.description}</p>}
+        <div className="mb-4 space-y-2">
+          <h1 className="text-2xl font-bold text-white md:text-3xl">{formData.title || "Untitled Form"}</h1>
+          {formData.description && <p className="text-sm text-white/80 leading-relaxed">{formData.description}</p>}
           {steps.length > 1 && (
-            <div className="text-sm text-white/70 font-medium">
+            <div className="text-xs text-white/70 font-medium">
               {steps[currentStepIndex]?.title} ({currentStepIndex + 1} of {steps.length})
             </div>
           )}
         </div>
 
         {/* Dark Grey Separator Line */}
-        <div className="border-t border-gray-600 mb-6"></div>
+        <div className="border-t border-gray-600 mb-4"></div>
 
         {/* Google Authentication Mockup */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center">
+                <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                 </svg>
               </div>
               <div>
-                <p className="text-sm font-medium text-white">John Doe</p>
+                <p className="text-xs font-medium text-white">John Doe</p>
                 <p className="text-xs text-white/70">john.doe@gmail.com</p>
               </div>
             </div>
             <Button
               variant="outline"
               size="sm"
-              className="border-black/50 text-black hover:bg-white/10 hover:border-white/50 hover:text-white"
+              className="h-7 text-xs border-black/50 text-black hover:bg-white/10 hover:border-white/50 hover:text-white"
             >
               Switch Account
             </Button>
@@ -132,30 +148,30 @@ export default function FormPreviewLive({ formData, activeStepId, steps, onStepC
       </div>
 
       {/* Form Questions Container - Original styling */}
-      <div className="rounded-2xl bg-neutral-100 p-8 shadow-lg">
+      <div className="rounded-2xl bg-neutral-100 p-6 shadow-lg">
 
       {/* Questions */}
       {activeStepQuestions.length > 0 ? (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {activeStepQuestions.map((question, index) => (
-            <div key={question.id} data-question-preview-id={question.id} className="preview-item space-y-3">
-              <Label className="text-base font-semibold text-black">
-                {index + 1}. {question.text || "Untitled Question"}
+            <div key={question.id} data-question-preview-id={question.id} className="preview-item space-y-2">
+              <Label className="text-sm font-semibold text-black">
+                {index + 1}. {renderFormattedText(question.text || "Untitled Question")}
                 {question.required && <span className="ml-1 text-red-600">*</span>}
               </Label>
 
               {question.type === "short" && (
                 <Input
                   placeholder={question.placeholder && question.placeholder.length > 0 ? question.placeholder : "Your answer"}
-                  className="border-black/20 bg-white text-black"
+                  className="h-8 text-sm border-black/20 bg-white text-black"
                 />
               )}
 
               {question.type === "paragraph" && (
                 <Textarea
                   placeholder={question.placeholder && question.placeholder.length > 0 ? question.placeholder : "Your answer"}
-                  rows={4}
-                  className="border-black/20 bg-white text-black resize-none"
+                  rows={3}
+                  className="text-sm border-black/20 bg-white text-black resize-none"
                 />
               )}
 
@@ -193,7 +209,7 @@ export default function FormPreviewLive({ formData, activeStepId, steps, onStepC
 
               {question.type === "dropdown" && (
                 <Select>
-                  <SelectTrigger className="border-black/20 bg-white text-black">
+                  <SelectTrigger className="h-8 text-sm border-black/20 bg-white text-black">
                     <SelectValue placeholder="Select an option" />
                   </SelectTrigger>
                   <SelectContent>
@@ -208,29 +224,29 @@ export default function FormPreviewLive({ formData, activeStepId, steps, onStepC
             </div>
           ))}
 
-          <div className="preview-item mt-8 flex items-center justify-between gap-4">
+          <div className="preview-item mt-6 flex items-center justify-between gap-3">
             {steps.length > 1 && !isFirstStep && (
               <Button
                 onClick={handlePreviousStep}
                 variant="outline"
-                className="border-black/20 bg-white text-black hover:bg-black hover:text-white transition-all duration-300"
+                className="h-8 text-sm border-black/20 bg-white text-black hover:bg-black hover:text-white transition-all duration-300"
               >
-                <ChevronLeft className="mr-2 h-4 w-4" />
+                <ChevronLeft className="mr-1 h-3 w-3" />
                 Previous
               </Button>
             )}
 
             {isLastStep ? (
-              <Button className="ml-auto bg-black text-white hover:bg-black/90 transition-all duration-300 hover:scale-[1.02] py-6 px-8 text-base">
+              <Button className="ml-auto h-8 text-sm bg-black text-white hover:bg-black/90 transition-all duration-300 hover:scale-[1.02] px-4">
                 Submit Form
               </Button>
             ) : (
               <Button
                 onClick={handleNextStep}
-                className="ml-auto bg-black text-white hover:bg-black/90 transition-all duration-300 hover:scale-[1.02] py-6 px-8 text-base"
+                className="ml-auto h-8 text-sm bg-black text-white hover:bg-black/90 transition-all duration-300 hover:scale-[1.02] px-4"
               >
                 Next Step
-                <ChevronRight className="ml-2 h-4 w-4" />
+                <ChevronRight className="ml-1 h-3 w-3" />
               </Button>
             )}
           </div>

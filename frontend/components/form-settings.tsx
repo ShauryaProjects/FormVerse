@@ -23,11 +23,11 @@ export default function FormSettings({ title, description, onTitleChange, onDesc
   }, [])
 
   return (
-    <div ref={cardRef} className="rounded-2xl border border-white/10 bg-white p-8 shadow-2xl">
-      <h2 className="mb-6 text-2xl font-bold text-black">Form Settings</h2>
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="form-title" className="text-black">
+    <div ref={cardRef} className="rounded-xl border border-white/10 bg-white p-4 shadow-lg">
+      <h2 className="mb-4 text-lg font-bold text-black">Form Settings</h2>
+      <div className="space-y-4">
+        <div className="space-y-1">
+          <Label htmlFor="form-title" className="text-sm text-black">
             Form Title
           </Label>
           <Input
@@ -35,11 +35,11 @@ export default function FormSettings({ title, description, onTitleChange, onDesc
             placeholder="Enter form title..."
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
-            className="border-black/20 bg-white text-black placeholder:text-black/40"
+            className="h-8 text-sm border-black/20 bg-white text-black placeholder:text-black/40"
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="form-description" className="text-black">
+        <div className="space-y-1">
+          <Label htmlFor="form-description" className="text-sm text-black">
             Form Description
           </Label>
           <Textarea
@@ -47,8 +47,8 @@ export default function FormSettings({ title, description, onTitleChange, onDesc
             placeholder="Enter form description..."
             value={description}
             onChange={(e) => onDescriptionChange(e.target.value)}
-            rows={4}
-            className="border-black/20 bg-white text-black placeholder:text-black/40 resize-none"
+            rows={3}
+            className="text-sm border-black/20 bg-white text-black placeholder:text-black/40 resize-none"
           />
         </div>
       </div>

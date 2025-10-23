@@ -55,9 +55,12 @@ export default function QuestionList({ questions, onQuestionsChange, stepId }: Q
     }
     onQuestionsChange([...questions, newQuestion])
 
+    // Auto-scroll to the new question
     setTimeout(() => {
       const newCard = listRef.current?.lastElementChild
       if (newCard) {
+        newCard.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        
         gsap.fromTo(
           newCard,
           { opacity: 0, y: 30, scale: 0.95 },
@@ -99,8 +102,8 @@ export default function QuestionList({ questions, onQuestionsChange, stepId }: Q
   }
 
   return (
-    <div className="space-y-6">
-      <div ref={listRef} className="space-y-4">
+    <div className="space-y-4">
+      <div ref={listRef} className="space-y-3">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={questions.map((q) => q.id)} strategy={verticalListSortingStrategy}>
             {questions.map((question, index) => (
@@ -119,9 +122,9 @@ export default function QuestionList({ questions, onQuestionsChange, stepId }: Q
       <Button
         ref={buttonRef}
         onClick={addQuestion}
-        className="w-full rounded-2xl border-2 border-dashed border-black/20 bg-transparent py-8 text-black hover:border-black/40 hover:bg-black/5 transition-all duration-300 hover:scale-[1.02]"
+        className="w-full rounded-xl border-2 border-dashed border-black/20 bg-transparent py-4 text-sm text-black hover:border-black/40 hover:bg-black/5 transition-all duration-300 hover:scale-[1.02]"
       >
-        <Plus className="mr-2 h-5 w-5" />
+        <Plus className="mr-2 h-4 w-4" />
         Add Question
       </Button>
     </div>
