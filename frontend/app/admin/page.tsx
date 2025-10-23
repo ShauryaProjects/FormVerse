@@ -24,7 +24,7 @@ type SubmissionItem = {
   _id: string
   name?: string
   email?: string
-  createdAt: string
+  submittedAt: string
 }
 
 type SectionKey = "dashboard" | "forms" | "settings"
@@ -376,7 +376,7 @@ export default function AdminDashboardPage() {
                           <tr key={s._id} className="hover:bg-black/2.5">
                             <Td>{s.name || "-"}</Td>
                             <Td>{s.email || "-"}</Td>
-                            <Td>{new Date(s.createdAt).toLocaleString()}</Td>
+                            <Td>{s.submittedAt ? new Date(s.submittedAt).toLocaleString() : "-"}</Td>
                           </tr>
                         ))}
                       </tbody>
