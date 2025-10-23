@@ -89,17 +89,50 @@ export default function FormPreviewLive({ formData, activeStepId, steps, onStepC
   }
 
   return (
-    <div ref={containerRef} className="rounded-2xl bg-neutral-100 p-8 shadow-lg">
-      {/* Form Header */}
-      <div className="preview-item mb-8 space-y-3">
-        <h1 className="text-3xl font-bold text-black md:text-4xl">{formData.title || "Untitled Form"}</h1>
-        {formData.description && <p className="text-black/60 leading-relaxed">{formData.description}</p>}
-        {steps.length > 1 && (
-          <div className="text-sm text-black/60 font-medium">
-            {steps[currentStepIndex]?.title} ({currentStepIndex + 1} of {steps.length})
+    <div ref={containerRef} className="space-y-8">
+      {/* Form Header and Auth Section - Black Background */}
+      <div className="rounded-2xl bg-black p-8 shadow-lg">
+        {/* Form Header */}
+        <div className="mb-6 space-y-3">
+          <h1 className="text-3xl font-bold text-white md:text-4xl">{formData.title || "Untitled Form"}</h1>
+          {formData.description && <p className="text-white/80 leading-relaxed">{formData.description}</p>}
+          {steps.length > 1 && (
+            <div className="text-sm text-white/70 font-medium">
+              {steps[currentStepIndex]?.title} ({currentStepIndex + 1} of {steps.length})
+            </div>
+          )}
+        </div>
+
+        {/* Dark Grey Separator Line */}
+        <div className="border-t border-gray-600 mb-6"></div>
+
+        {/* Google Authentication Mockup */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-white">John Doe</p>
+                <p className="text-xs text-white/70">john.doe@gmail.com</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-black/50 text-black hover:bg-white/10 hover:border-white/50 hover:text-white"
+            >
+              Switch Account
+            </Button>
           </div>
-        )}
+        </div>
       </div>
+
+      {/* Form Questions Container - Original styling */}
+      <div className="rounded-2xl bg-neutral-100 p-8 shadow-lg">
 
       {/* Questions */}
       {activeStepQuestions.length > 0 ? (
@@ -207,6 +240,7 @@ export default function FormPreviewLive({ formData, activeStepId, steps, onStepC
           <p className="text-black/40 text-sm">No questions yet. Add questions to see the preview.</p>
         </div>
       )}
+      </div>
     </div>
   )
 }

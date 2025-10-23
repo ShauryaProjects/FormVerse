@@ -316,7 +316,7 @@ export default function FormViewPage() {
                   onClick={handleChooseDifferentAccount}
                   variant="outline"
                   size="sm"
-                  className="border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                  className="border-black/50 text-black hover:bg-white/10 hover:border-white/50 hover:text-white"
                 >
                   Switch Account
                 </Button>
