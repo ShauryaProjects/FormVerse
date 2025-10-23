@@ -84,6 +84,19 @@ export default function FormViewPage() {
     }
   }
 
+  const handleChooseDifferentAccount = async () => {
+    try {
+      await signOut(auth)
+      // Small delay to ensure sign out completes
+      setTimeout(() => {
+        handleGoogleSignIn()
+      }, 100)
+    } catch (error) {
+      console.error("Error switching accounts:", error)
+      toast.error("Failed to switch accounts.")
+    }
+  }
+
   useEffect(() => {
     const fetchForm = async () => {
       try {
@@ -285,26 +298,38 @@ export default function FormViewPage() {
           <div className="mb-8 space-y-3">
             <Label className="text-base font-semibold text-black">Sign in with Google to submit</Label>
             {user ? (
-              <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <img 
-                    src={user.photoURL || ""} 
-                    alt="Profile" 
-                    className="w-8 h-8 rounded-full"
-                  />
-                  <div>
-                    <p className="text-sm font-medium text-green-800">{user.displayName}</p>
-                    <p className="text-xs text-green-600">{user.email}</p>
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <img 
+                      src={user.photoURL || ""} 
+                      alt="Profile" 
+                      className="w-8 h-8 rounded-full"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-green-800">{user.displayName}</p>
+                      <p className="text-xs text-green-600">{user.email}</p>
+                    </div>
                   </div>
                 </div>
-                <Button
-                  onClick={handleSignOut}
-                  variant="outline"
-                  size="sm"
-                  className="border-green-300 text-green-700 hover:bg-green-100"
-                >
-                  Sign Out
-                </Button>
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={handleChooseDifferentAccount}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-100"
+                  >
+                    Choose Different Account
+                  </Button>
+                  <Button
+                    onClick={handleSignOut}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 border-green-300 text-green-700 hover:bg-green-100"
+                  >
+                    Sign Out
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="space-y-3">

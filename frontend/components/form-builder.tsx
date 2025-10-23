@@ -44,6 +44,7 @@ export default function FormBuilder() {
   const [isPreviewOpen, setPreviewOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [isLinkCopied, setIsLinkCopied] = useState(false)
 
   const activeStepQuestions = formData.questions.filter((q) => q.stepId === activeStepId)
 
@@ -137,11 +138,13 @@ export default function FormBuilder() {
                 <Button
                   onClick={() => {
                     navigator.clipboard.writeText(`${window.location.origin}/form/${savedFormId}`)
+                    setIsLinkCopied(true)
+                    setTimeout(() => setIsLinkCopied(false), 2000)
                   }}
                   variant="outline"
                   className="border-green-400 bg-green-200 text-green-800 hover:bg-green-300"
                 >
-                  Copy Link
+                  {isLinkCopied ? "Copied!!" : "Copy Link"}
                 </Button>
               </div>
               <div className="mt-3">
