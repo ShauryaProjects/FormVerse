@@ -281,22 +281,22 @@ export default function FormViewPage() {
     return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-6 py-12 max-w-2xl">
-        {/* Form Preview Container - Same styling as form builder preview */}
-        <div className="rounded-2xl bg-neutral-100 p-8 shadow-lg">
+        {/* Form Header and Auth Section - Black Background */}
+        <div className="rounded-2xl bg-black p-8 shadow-lg mb-8">
           {/* Form Header */}
           <div className="mb-8 space-y-3">
-            <h1 className="text-3xl font-bold text-black md:text-4xl">{formData.title}</h1>
-            {formData.description && <p className="text-black/60 leading-relaxed">{formData.description}</p>}
+            <h1 className="text-3xl font-bold text-white md:text-4xl">{formData.title}</h1>
+            {formData.description && <p className="text-white/80 leading-relaxed">{formData.description}</p>}
             {formData.steps.length > 1 && (
-              <div className="text-sm text-black/60 font-medium">
+              <div className="text-sm text-white/70 font-medium">
                 {currentStep?.title} ({currentStepIndex + 1} of {formData.steps.length})
               </div>
             )}
           </div>
 
           {/* Google Authentication */}
-          <div className="mb-8 space-y-3">
-            <Label className="text-base font-semibold text-black">Sign in with Google to submit</Label>
+          <div className="space-y-3">
+            <Label className="text-base font-semibold text-white">Sign in with Google to submit</Label>
             {user ? (
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center justify-between mb-3">
@@ -321,14 +321,6 @@ export default function FormViewPage() {
                   >
                     Choose Different Account
                   </Button>
-                  <Button
-                    onClick={handleSignOut}
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 border-green-300 text-green-700 hover:bg-green-100"
-                  >
-                    Sign Out
-                  </Button>
                 </div>
               </div>
             ) : (
@@ -345,10 +337,14 @@ export default function FormViewPage() {
                   </svg>
                   <span>Sign in with Google</span>
                 </Button>
-                <p className="text-xs text-black/50">Your email will be shown in the responses.</p>
+                <p className="text-xs text-white/70">Your email will be shown in the responses.</p>
               </div>
             )}
           </div>
+        </div>
+
+        {/* Form Questions Container - Original styling */}
+        <div className="rounded-2xl bg-neutral-100 p-8 shadow-lg">
 
           {/* Questions */}
           {currentStepQuestions.length > 0 ? (

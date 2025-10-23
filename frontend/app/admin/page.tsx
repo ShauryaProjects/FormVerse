@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { gsap } from "gsap"
 import { LayoutGrid, FileText, Settings as SettingsIcon, LogOut, RefreshCw, Share2, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ConfirmationModal } from "@/components/ui/confirmation-modal"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
@@ -41,6 +42,9 @@ export default function AdminDashboardPage() {
     totalForms: 0,
   })
   const [copiedFormId, setCopiedFormId] = useState<string | null>(null)
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [confirmForm, setConfirmForm] = useState<FormItem | null>(null)
+  const [isConfirmLoading, setIsConfirmLoading] = useState(false)
 
   const mainRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
@@ -142,6 +146,23 @@ export default function AdminDashboardPage() {
       if (selectedForm?._id === formId) handleBackToForms()
     } catch (e: any) {
       setError(e?.message ?? "Unknown error")
+    }
+  }
+
+  const requestDeleteForm = (form: FormItem) => {
+    setConfirmForm(form)
+    setIsConfirmOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!confirmForm) return
+    try {
+      setIsConfirmLoading(true)
+      await handleDeleteForm(confirmForm._id)
+      setIsConfirmOpen(false)
+      setConfirmForm(null)
+    } finally {
+      setIsConfirmLoading(false)
     }
   }
 
@@ -311,7 +332,7 @@ export default function AdminDashboardPage() {
                       <Button 
                         onClick={() => handleShareForm(form._id)}
                         variant="outline" 
-                        className="h-9 px-3 border-green-200 text-green-700 hover:bg-green-50"
+                        className="h-9 px-3 border-green-200 text-green-700 bg-white hover:bg-green-700 hover:text-white hover:border-green-700"
                       >
                         {copiedFormId === form._id ? (
                           <>
@@ -325,13 +346,13 @@ export default function AdminDashboardPage() {
                           </>
                         )}
                       </Button>
-                      <Button variant="outline" className="h-9 px-3 border-blue-200 text-blue-700 hover:bg-blue-50">
+                      <Button variant="outline" className="h-9 px-3 border-blue-200 text-blue-700 bg-white hover:bg-blue-700 hover:text-white hover:border-blue-700">
                         Edit
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-9 px-3 border-red-200 text-red-700 hover:bg-red-50"
-                        onClick={() => handleDeleteForm(form._id)}
+                        className="h-9 px-3 border-red-200 text-red-700 bg-white hover:bg-red-700 hover:text-white hover:border-red-700"
+                        onClick={() => requestDeleteForm(form)}
                       >
                         Delete
                       </Button>
@@ -395,6 +416,19 @@ export default function AdminDashboardPage() {
           </div>
         </section>
       </div>
+
+      {/* Delete confirmation modal */}
+      <ConfirmationModal
+        isOpen={isConfirmOpen}
+        onClose={() => { if (!isConfirmLoading) { setIsConfirmOpen(false); setConfirmForm(null) } }}
+        onConfirm={confirmDelete}
+        title="Confirm deletion"
+        description={`This will permanently delete the form${confirmForm ? ` \"${confirmForm.title}\"` : ""}. This action cannot be undone.`}
+        confirmText="Delete"
+        confirmationPhrase="CONFIRM"
+        variant="destructive"
+        isLoading={isConfirmLoading}
+      />
     </div>
   )
 }
