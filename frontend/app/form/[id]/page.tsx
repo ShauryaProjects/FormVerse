@@ -284,7 +284,7 @@ export default function FormViewPage() {
         {/* Form Header and Auth Section - Black Background */}
         <div className="rounded-2xl bg-black p-8 shadow-lg mb-8">
           {/* Form Header */}
-          <div className="mb-8 space-y-3">
+          <div className="mb-6 space-y-3">
             <h1 className="text-3xl font-bold text-white md:text-4xl">{formData.title}</h1>
             {formData.description && <p className="text-white/80 leading-relaxed">{formData.description}</p>}
             {formData.steps.length > 1 && (
@@ -294,34 +294,32 @@ export default function FormViewPage() {
             )}
           </div>
 
+          {/* Dark Grey Separator Line */}
+          <div className="border-t border-gray-600 mb-6"></div>
+
           {/* Google Authentication */}
           <div className="space-y-3">
-            <Label className="text-base font-semibold text-white">Sign in with Google to submit</Label>
             {user ? (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    <img 
-                      src={user.photoURL || ""} 
-                      alt="Profile" 
-                      className="w-8 h-8 rounded-full"
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-green-800">{user.displayName}</p>
-                      <p className="text-xs text-green-600">{user.email}</p>
-                    </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <img 
+                    src={user.photoURL || ""} 
+                    alt="Profile" 
+                    className="w-8 h-8 rounded-full"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-white">{user.displayName}</p>
+                    <p className="text-xs text-white/70">{user.email}</p>
                   </div>
                 </div>
-                <div className="flex space-x-2">
-                  <Button
-                    onClick={handleChooseDifferentAccount}
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-100"
-                  >
-                    Choose Different Account
-                  </Button>
-                </div>
+                <Button
+                  onClick={handleChooseDifferentAccount}
+                  variant="outline"
+                  size="sm"
+                  className="border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                >
+                  Switch Account
+                </Button>
               </div>
             ) : (
               <div className="space-y-3">
