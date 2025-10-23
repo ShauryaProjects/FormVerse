@@ -98,7 +98,9 @@ export async function GET(
         step.questions.map(q => ({
           id: q._id || `question-${Math.random()}`,
           text: q.label,
-          type: q.type,
+          type: q.type === 'shortAnswer' ? 'short' :
+                q.type === 'multipleChoice' ? 'multiple' :
+                q.type, // paragraph, checkbox, dropdown are already correct
           required: q.required,
           options: q.options || [],
           stepId: step._id || `step-${Math.random()}`

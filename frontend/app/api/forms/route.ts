@@ -118,7 +118,9 @@ export async function POST(request: NextRequest) {
       return {
         title: step.title,
         questions: stepQuestions.map(q => ({
-          type: q.type,
+          type: q.type === 'short' ? 'shortAnswer' : 
+                q.type === 'multiple' ? 'multipleChoice' : 
+                q.type, // paragraph, checkbox, dropdown are already correct
           label: q.text,
           options: q.options || [],
           required: q.required || false
