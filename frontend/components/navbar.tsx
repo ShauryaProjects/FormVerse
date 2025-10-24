@@ -93,7 +93,7 @@ export default function Navbar() {
         {/* Logo */}
           <Link href="/" className="flex min-w-0 flex-1 items-center gap-2">
             <div className="h-8 w-8 shrink-0 rounded-lg bg-primary-foreground" />
-            <span className="truncate text-lg font-bold tracking-tight text-primary-foreground md:text-xl">Formify</span>
+            <span className="truncate text-lg font-bold tracking-tight text-primary-foreground md:text-xl">FormVerse</span>
         </Link>
 
           {/* Desktop Navigation */}

@@ -170,7 +170,7 @@ export default function Contact() {
     <section 
       id="contact-section"
       ref={sectionRef} 
-      className="relative min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 px-6 py-24 md:py-32 lg:py-40"
+      className="relative min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 px-6 pb-24 md:pb-32 lg:pb-40"
     >
       <div className="mx-auto max-w-7xl">
         {/* Section Header */}

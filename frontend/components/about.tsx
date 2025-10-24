@@ -80,11 +80,11 @@ export default function About() {
           {/* Content */}
           <div className="space-y-5 md:space-y-6">
             <h2 className="text-balance text-3xl font-bold tracking-tight text-foreground md:text-4xl lg:text-5xl">
-              Why Formify?
+              Why FormVerse?
             </h2>
             <p className="text-pretty text-base leading-relaxed text-muted-foreground md:text-lg">
-              Formify helps you collect feedback, run surveys, and manage registrations with ease. Whether you&apos;re a
-              business, educator, or creator, Formify gives you the tools to connect with your audience seamlessly.
+              FormVerse helps you collect feedback, run surveys, and manage registrations with ease. Whether you&apos;re a
+              business, educator, or creator, FormVerse gives you the tools to connect with your audience seamlessly.
             </p>
             <p className="text-pretty text-base leading-relaxed text-muted-foreground md:text-lg">
               With years of expertise and a passion for innovation, we&apos;ve helped countless businesses transform

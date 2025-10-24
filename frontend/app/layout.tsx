@@ -6,7 +6,7 @@ import { Toaster } from 'react-hot-toast'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Formify',
+  title: 'FormVerse',
   description: 'Create Forms. Share Links. Collect Responses.',
 }
 

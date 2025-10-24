@@ -1,4 +1,4 @@
-// Firebase initialization for client
+// Firebase initialization for FormVerse client
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider, GithubAuthProvider } from "firebase/auth";

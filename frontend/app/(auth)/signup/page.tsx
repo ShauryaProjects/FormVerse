@@ -77,7 +77,7 @@ export default function SignupPage() {
   return (
     <div ref={cardRef} className="w-full rounded-2xl border border-white/30 bg-white/60 p-8 shadow-xl backdrop-blur-xl">
       <div className="mb-6 text-center">
-        <h1 className="mb-1 text-2xl font-bold">✨ Join Formify Today!</h1>
+        <h1 className="mb-1 text-2xl font-bold">✨ Join FormVerse Today!</h1>
         <p className="text-sm text-black/60">Create, customize, and share forms in minutes.</p>
       </div>
 

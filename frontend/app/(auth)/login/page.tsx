@@ -73,7 +73,7 @@ export default function LoginPage() {
   return (
     <div ref={cardRef} className="w-full rounded-2xl border border-white/30 bg-white/60 p-8 shadow-xl backdrop-blur-xl">
       <div className="mb-6 text-center">
-        <h1 className="mb-1 text-2xl font-bold">👋 Welcome back to Formify!</h1>
+        <h1 className="mb-1 text-2xl font-bold">👋 Welcome back to FormVerse!</h1>
         <p className="text-sm text-black/60">Access your forms and track submissions effortlessly.</p>
       </div>
 

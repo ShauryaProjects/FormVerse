@@ -197,7 +197,7 @@ export default function AdminDashboardPage() {
       <div ref={mainRef} className="mx-auto grid min-h-screen w-full grid-cols-1 md:grid-cols-[240px_1fr] pt-16">
         {/* Sidebar */}
         <aside className="bg-gradient-to-b from-black to-neutral-900 text-white flex flex-col pt-4">
-          <div className="flex h-16 items-center px-5 font-semibold tracking-tight">Formify Admin</div>
+          <div className="flex h-16 items-center px-5 font-semibold tracking-tight">FormVerse Admin</div>
           <nav className="space-y-1 px-3 pb-6 flex-1">
             <SidebarLink
               icon={<LayoutGrid className="h-4 w-4" />}

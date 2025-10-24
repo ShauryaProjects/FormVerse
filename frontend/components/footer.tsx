@@ -7,11 +7,11 @@ export default function Footer() {
           {/* Logo */}
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-primary-foreground" />
-            <span className="text-xl font-bold tracking-tight">Formify</span>
+            <span className="text-xl font-bold tracking-tight">FormVerse</span>
           </div>
 
           {/* Copyright */}
-          <p className="text-xs text-primary-foreground/60 sm:text-sm">© 2025 Formify. All rights reserved.</p>
+          <p className="text-xs text-primary-foreground/60 sm:text-sm">© 2025 FormVerse. All rights reserved.</p>
         </div>
       </div>
     </footer>

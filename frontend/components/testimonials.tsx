@@ -20,14 +20,14 @@ const testimonials: Testimonial[] = [
   {
     id: 1,
     name: "Sarah Chen",
-    review: "Formify transformed how I collect customer feedback. The intuitive builder and beautiful forms make my business look professional and trustworthy.",
+    review: "FormVerse transformed how I collect customer feedback. The intuitive builder and beautiful forms make my business look professional and trustworthy.",
     rating: 5,
     avatar: "https://api.dicebear.com/7.x/adventurer/svg?seed=Sarah&backgroundColor=b6e3f4&hair=short01&eyes=variant01"
   },
   {
     id: 2,
     name: "Marcus Rodriguez",
-    review: "As a freelance designer, I need forms that match my brand aesthetic. Formify's customization options are exactly what I was looking for.",
+    review: "As a freelance designer, I need forms that match my brand aesthetic. FormVerse's customization options are exactly what I was looking for.",
     rating: 5,
     avatar: "https://api.dicebear.com/7.x/micah/svg?seed=Marcus&backgroundColor=ffd5dc&hair=dannyPhantom&eyes=eyes"
   },
@@ -41,7 +41,7 @@ const testimonials: Testimonial[] = [
   {
     id: 4,
     name: "David Kim",
-    review: "Setting up complex multi-step forms used to take hours. With Formify, I can create them in minutes. The time savings alone pays for itself.",
+    review: "Setting up complex multi-step forms used to take hours. With FormVerse, I can create them in minutes. The time savings alone pays for itself.",
     rating: 5,
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=David&backgroundColor=ffdfbf&accessories=round&hair=shortWaved"
   },
@@ -55,7 +55,7 @@ const testimonials: Testimonial[] = [
   {
     id: 6,
     name: "Alex Morgan",
-    review: "The integration capabilities are fantastic. Connecting Formify to our CRM and email tools was straightforward and works flawlessly.",
+    review: "The integration capabilities are fantastic. Connecting FormVerse to our CRM and email tools was straightforward and works flawlessly.",
     rating: 5,
     avatar: "https://api.dicebear.com/7.x/thumbs/svg?seed=Alex&backgroundColor=b6e3f4&shapeColor=0a5b83,1c799f,69d2e7"
   }
@@ -209,7 +209,7 @@ export default function Testimonials() {
             What Our Users Say
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-gray-600 md:text-xl">
-            See how Formify helps creators and teams build forms effortlessly.
+            See how FormVerse helps creators and teams build forms effortlessly.
           </p>
         </div>
 
