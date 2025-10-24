@@ -1,11 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import FormBuilder from "@/components/form-builder"
 import type { FormData } from "@/components/form-builder"
 
-export default function BuilderPage() {
+function BuilderPageContent() {
   const searchParams = useSearchParams()
   const formId = searchParams.get('id')
   const [isLoading, setIsLoading] = useState(!!formId)
@@ -54,5 +54,20 @@ export default function BuilderPage() {
     <main className="min-h-screen bg-background">
       <FormBuilder initialFormData={initialFormData} formId={formId} />
     </main>
+  )
+}
+
+export default function BuilderPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-black/60">Loading...</p>
+        </div>
+      </div>
+    }>
+      <BuilderPageContent />
+    </Suspense>
   )
 }
