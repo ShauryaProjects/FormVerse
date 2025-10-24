@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Bold, Italic, Underline } from "lucide-react"
 
 interface FormattedInputFieldProps {
@@ -21,31 +21,46 @@ export default function FormattedInputField({
   const [italicActive, setItalicActive] = useState(false)
   const [underlineActive, setUnderlineActive] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
+  const isUpdatingFromProps = useRef(false)
 
-  // Update internal state when value prop changes
+  // Update internal state when value prop changes (only if it's different from current content)
   useEffect(() => {
-    setFormattedValue(value)
-    if (editorRef.current) {
-      editorRef.current.innerHTML = value
+    if (editorRef.current && !isUpdatingFromProps.current) {
+      const currentContent = editorRef.current.innerHTML
+      if (currentContent !== value) {
+        setFormattedValue(value)
+        editorRef.current.innerHTML = value
+      }
     }
   }, [value])
 
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+  const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
     const htmlContent = e.currentTarget.innerHTML
+    isUpdatingFromProps.current = true
     setFormattedValue(htmlContent)
     onChange?.(htmlContent)
-  }
+    // Reset the flag after a brief delay to allow the onChange to propagate
+    setTimeout(() => {
+      isUpdatingFromProps.current = false
+    }, 0)
+  }, [onChange])
 
-  const handleFormat = (command: string, activeState: boolean, setActiveState: (active: boolean) => void) => {
+  const handleFormat = useCallback((command: string, activeState: boolean, setActiveState: (active: boolean) => void) => {
+    if (!editorRef.current) return
+    
     // Focus the editor first
-    editorRef.current?.focus()
+    editorRef.current.focus()
     
     // Execute the formatting command
     document.execCommand(command, false)
     
     // Toggle the active state
     setActiveState(!activeState)
-  }
+    
+    // Trigger input event to update state
+    const event = new Event('input', { bubbles: true })
+    editorRef.current.dispatchEvent(event)
+  }, [])
 
   const handleBold = () => {
     handleFormat("bold", boldActive, setBoldActive)
