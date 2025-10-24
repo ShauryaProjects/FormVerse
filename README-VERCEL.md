@@ -1,6 +1,6 @@
-# Formify Backend - Vercel Deployment
+# FormVerse Backend - Vercel Deployment
 
-This is the backend API for Formify form builder, configured for Vercel serverless deployment.
+This is the backend API for FormVerse form builder, configured for Vercel serverless deployment.
 
 ## 🚀 Quick Deploy to Vercel
 

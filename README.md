@@ -1,4 +1,4 @@
-# Formify - Form Builder Application
+# FormVerse - Form Builder Application
 
 A full-stack form builder application with drag-and-drop functionality and real-time preview.
 

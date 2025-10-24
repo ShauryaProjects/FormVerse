@@ -1,6 +1,6 @@
-# Redis Setup for Formify
+# Redis Setup for FormVerse
 
-This document explains how to set up Redis caching for the Formify project.
+This document explains how to set up Redis caching for the FormVerse project.
 
 ## Redis URL Configuration
 
@@ -14,7 +14,7 @@ REDIS_URL="redis://default:2k78GIgv5bkBvBbfDX5emMccqfD6roab@redis-16952.c241.us-
 To deploy to Vercel, you need to add the Redis URL as an environment variable:
 
 1. Go to your Vercel dashboard
-2. Select your Formify project
+2. Select your FormVerse project
 3. Go to Settings > Environment Variables
 4. Add a new variable:
    - **Name**: `REDIS_URL`
