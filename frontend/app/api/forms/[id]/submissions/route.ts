@@ -61,6 +61,7 @@ export async function POST(
     const newSubmission = new Submission({
       formId: id,
       email: body.email || null,
+      name: body.name || null,
       responses: body.responses || {},
     })
 

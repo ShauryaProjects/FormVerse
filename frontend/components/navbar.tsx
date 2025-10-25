@@ -58,12 +58,37 @@ export default function Navbar() {
   }
 
   const handleContactClick = () => {
-    const contactSection = document.getElementById('contact-section')
-    if (contactSection) {
-      contactSection.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      })
+    // Check if we're on the home page
+    if (window.location.pathname === '/') {
+      const contactSection = document.getElementById('contact-section')
+      if (contactSection) {
+        contactSection.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        })
+      }
+    } else {
+      // Navigate to home page with contact section hash
+      router.push('/#contact-section')
+    }
+    // Close mobile menu if open and ensure navbar stays visible during navigation
+    setMobileOpen(false)
+    setIsVisible(true)
+  }
+
+  const handleAboutClick = () => {
+    // Check if we're on the home page
+    if (window.location.pathname === '/') {
+      const aboutSection = document.getElementById('about-section')
+      if (aboutSection) {
+        aboutSection.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        })
+      }
+    } else {
+      // Navigate to home page with about section hash
+      router.push('/#about-section')
     }
     // Close mobile menu if open and ensure navbar stays visible during navigation
     setMobileOpen(false)
@@ -104,9 +129,12 @@ export default function Navbar() {
           >
             Home
           </button>
-          <a href="#" className="transition-colors hover:text-primary-foreground/70">
+          <button 
+            onClick={handleAboutClick}
+            className="transition-colors hover:text-primary-foreground/70 cursor-pointer"
+          >
             About
-          </a>
+          </button>
           <button 
             onClick={handleContactClick}
             className="transition-colors hover:text-primary-foreground/70 cursor-pointer"
@@ -166,9 +194,12 @@ export default function Navbar() {
               >
                 Home
               </button>
-              <a href="#" className="px-1 py-2 text-primary-foreground/90 hover:text-primary-foreground">
+              <button 
+                onClick={handleAboutClick}
+                className="px-1 py-2 text-primary-foreground/90 hover:text-primary-foreground text-left cursor-pointer"
+              >
                 About
-              </a>
+              </button>
               <button 
                 onClick={handleContactClick}
                 className="px-1 py-2 text-primary-foreground/90 hover:text-primary-foreground text-left cursor-pointer"

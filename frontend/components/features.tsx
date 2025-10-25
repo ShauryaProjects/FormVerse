@@ -114,7 +114,7 @@ export default function Features() {
   }, [])
 
   return (
-    <section ref={sectionRef} className="bg-background px-6 py-24 md:py-32 lg:py-40">
+    <section ref={sectionRef} id="features-section" className="bg-background px-6 pb-24 md:pb-32 lg:pb-40">
       <div className="mx-auto max-w-7xl">
         <h2
           ref={titleRef}

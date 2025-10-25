@@ -61,7 +61,11 @@ export default function About() {
   }, [])
 
   return (
-    <section ref={sectionRef} className="bg-secondary px-6 py-24 md:py-32 lg:py-40">
+    <section 
+      id="about-section"
+      ref={sectionRef} 
+      className="bg-secondary px-6 py-24 md:py-32 lg:py-40"
+    >
       <div className="mx-auto max-w-7xl">
         <div className="grid items-center gap-10 md:gap-12 lg:grid-cols-2 lg:gap-16">
           {/* SVG Animation */}

@@ -216,6 +216,7 @@ export default function FormViewPage() {
         body: JSON.stringify({
           responses: formResponses,
           email: user?.email || null,
+          name: user?.displayName || user?.email?.split('@')[0] || null,
           formId: formData._id,
         }),
       })

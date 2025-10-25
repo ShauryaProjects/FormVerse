@@ -55,7 +55,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const { id } = req.query
-      const { responses, formId } = req.body
+      const { responses, formId, email, name } = req.body
 
       if (!id) {
         return res.status(400).json({
@@ -83,6 +83,8 @@ export default async function handler(req, res) {
       // Create the submission
       const submission = new Submission({
         formId: id,
+        email: email || null,
+        name: name || null,
         responses: responses,
         submittedAt: new Date(),
       })
