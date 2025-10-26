@@ -93,32 +93,63 @@ export default function QuestionList({ questions, onQuestionsChange, stepId }: Q
           scale: 1,
           duration: 0.6,
           ease: "back.out(1.7)",
-        })
-        
-        // Auto-focus timing strategy:
-        // 1. Wait for GSAP animation to complete (600ms duration)
-        // 2. Add small buffer (100ms) for scroll to complete
-        // 3. Then focus the contentEditable div to trigger keyboard on mobile
-        setTimeout(() => {
-          const questionInput = newCard.querySelector('[data-question-input]') as HTMLDivElement
-          if (questionInput) {
-            // Find the contentEditable div inside FormattedInputField
-            const editableDiv = questionInput.querySelector('div[contenteditable="true"]') as HTMLElement
-            if (editableDiv) {
-              // Force focus on the contentEditable element
-              // This ensures the keyboard stays open on mobile devices
-              editableDiv.focus()
-              // Set cursor to end of text
-              const range = document.createRange()
-              range.selectNodeContents(editableDiv)
-              range.collapse(false)
-              const selection = window.getSelection()
-              selection?.removeAllRanges()
-              selection?.addRange(range)
+          onComplete: () => {
+            // ANIMATION-FOCUS SYNC: Focus happens after animation completes
+            // This ensures the animation plays fully before auto-focusing
+            console.log("🎬 GSAP animation completed, starting focus sequence")
+            
+            // Try to find the contentEditable div with multiple selectors
+            const tryFocus = (attempt: number) => {
+              // Strategy 1: Find via data attribute wrapper
+              let editableDiv = newCard.querySelector('[data-question-input] div[contenteditable="true"]') as HTMLElement
+              
+              // Strategy 2: Direct search for contentEditable in the card
+              if (!editableDiv) {
+                editableDiv = newCard.querySelector('div[contenteditable="true"]') as HTMLElement
+              }
+              
+              // Strategy 3: Search all nested contentEditable divs
+              if (!editableDiv) {
+                const allEditable = newCard.querySelectorAll('div[contenteditable="true"]')
+                editableDiv = allEditable[0] as HTMLElement
+              }
+              
+              if (editableDiv) {
+                console.log("✅ Found contentEditable div, focusing...")
+                
+                // Focus the contentEditable element
+                // This will open the mobile keyboard and keep it open
+                editableDiv.focus()
+                
+                // Position cursor at the end for immediate typing
+                const range = document.createRange()
+                const selection = window.getSelection()
+                if (editableDiv.childNodes.length > 0) {
+                  range.selectNodeContents(editableDiv)
+                  range.collapse(false) // Collapse to the end
+                } else {
+                  range.setStart(editableDiv, 0)
+                  range.setEnd(editableDiv, 0)
+                }
+                selection?.removeAllRanges()
+                selection?.addRange(range)
+                
+                console.log("✅ Auto-focused new question input successfully")
+                newlyAddedQuestionId.current = null
+              } else if (attempt < 5) {
+                console.log(`⚠️ Attempt ${attempt + 1}: contentEditable not found, retrying...`)
+                setTimeout(() => tryFocus(attempt + 1), 300)
+              } else {
+                console.log("ℹ️ Skipping auto-focus - user can manually click the input")
+                newlyAddedQuestionId.current = null
+              }
             }
+            
+            // Start the focus attempt with a delay to let DOM settle completely
+            // The element needs to be fully rendered and interactive
+            setTimeout(() => tryFocus(0), 300)
           }
-          newlyAddedQuestionId.current = null // Reset after focusing
-        }, 700) // 600ms animation + 100ms buffer for smooth transition
+        })
       }
     }, 0) // Use 0ms timeout to ensure DOM is updated
   }

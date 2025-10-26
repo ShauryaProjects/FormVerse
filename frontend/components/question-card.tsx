@@ -23,6 +23,8 @@ interface QuestionCardProps {
 export default function QuestionCard({ question, index, onUpdate, onDelete, isNewlyAdded }: QuestionCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: question.id })
   const questionInputRef = useRef<HTMLDivElement>(null)
+  const optionInputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const [shouldFocusIndex, setShouldFocusIndex] = useState<number | null>(null)
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -32,31 +34,80 @@ export default function QuestionCard({ question, index, onUpdate, onDelete, isNe
 
   const hasOptions = ["multiple", "checkbox", "dropdown"].includes(question.type)
   
-  // Auto-focus question input when newly added (controlled by parent component timing)
+  // AUTO-ADD DEFAULT: When question type changes to one that requires options
+  // This creates the first option so users can immediately start typing
   useEffect(() => {
-    // The parent component handles the animation and focusing
-    // This effect is kept for any additional setup if needed
+    if (hasOptions && (!question.options || question.options.length === 0)) {
+      console.log("➕ Adding default option for", question.type)
+      onUpdate(question.id, { options: [""] })
+      // Auto-focus the first option
+      setTimeout(() => setShouldFocusIndex(0), 100)
+    }
+  }, [hasOptions, question.id, onUpdate])
+  
+  // Reset focus flag after focusing is done
+  useEffect(() => {
+    if (shouldFocusIndex !== null) {
+      const timer = setTimeout(() => setShouldFocusIndex(null), 500)
+      return () => clearTimeout(timer)
+    }
+  }, [shouldFocusIndex])
+  
+  // Auto-focus when the question is newly added and animation is likely complete
+  useEffect(() => {
+    if (isNewlyAdded) {
+      // Wait for both the card render and any GSAP animations
+      // The animation takes 600ms, plus 100ms buffer = 700ms total
+      const focusTimer = setTimeout(() => {
+        console.log("🔍 Attempting to focus newly added question")
+        
+        if (questionInputRef.current) {
+          // Find the contentEditable div
+          const editableDiv = questionInputRef.current.querySelector('div[contenteditable="true"]') as HTMLElement
+          if (editableDiv) {
+            console.log("✅ Found editable div, focusing now")
+            editableDiv.focus()
+            
+            // Set cursor position
+            try {
+              const range = document.createRange()
+              const selection = window.getSelection()
+              if (selection) {
+                range.selectNodeContents(editableDiv)
+                range.collapse(false)
+                selection.removeAllRanges()
+                selection.addRange(range)
+              }
+            } catch (e) {
+              console.warn("Cursor positioning failed:", e)
+            }
+          } else {
+            console.warn("⚠️ contentEditable div not found in questionInputRef")
+          }
+        } else {
+          console.warn("⚠️ questionInputRef.current is null")
+        }
+      }, 500) // Wait for GSAP animation (600ms) + buffer (100ms)
+      
+      return () => clearTimeout(focusTimer)
+    }
   }, [isNewlyAdded])
-
-  const optionInputRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const addOption = () => {
     const options = question.options || []
     const newIndex = options.length
+    
+    // OPTION-ADD-LOGIC: Add new empty option to the array
+    // Then trigger auto-focus on the newly added option
     onUpdate(question.id, { options: [...options, ""] })
     
-    // Auto-focus timing strategy:
-    // Wait for React to render the new option input in the DOM
-    // Then focus it immediately so keyboard stays open on mobile
+    // AUTO-FOCUS TRIGGER: Set the index that should receive focus
+    // This is handled in the ref callback of the Input component
+    // The small delay preserves the fade-in animation
     setTimeout(() => {
-      const input = optionInputRefs.current[newIndex]
-      if (input) {
-        // Focus the new input field
-        input.focus()
-        // On mobile devices, this keeps the keyboard open
-        // and allows immediate typing
-      }
-    }, 100) // Small delay to ensure DOM is updated
+      setShouldFocusIndex(newIndex)
+      console.log(`🎯 Setting focus target to index ${newIndex}`)
+    }, 150)
   }
 
   const updateOption = (optionIndex: number, value: string) => {
@@ -69,7 +120,9 @@ export default function QuestionCard({ question, index, onUpdate, onDelete, isNe
     const options = question.options?.filter((_, i) => i !== optionIndex) || []
     onUpdate(question.id, { options })
     // Update refs array to match the new options array
-    optionInputRefs.current = optionInputRefs.current.filter((_, i) => i !== optionIndex)
+    const newRefs = optionInputRefs.current.filter((_, i) => i !== optionIndex)
+    optionInputRefs.current.length = 0
+    newRefs.forEach(ref => optionInputRefs.current.push(ref))
   }
 
   const handleTextChange = (htmlValue: string) => {
@@ -158,28 +211,46 @@ export default function QuestionCard({ question, index, onUpdate, onDelete, isNe
           <div className="space-y-2">
             <Label className="text-sm text-black">Options</Label>
             <div className="space-y-2">
-              {(question.options || []).map((option, optionIndex) => (
-                <div key={optionIndex} className="flex items-center gap-2">
-                  <Input
-                    ref={(el) => {
-                      optionInputRefs.current[optionIndex] = el
-                    }}
-                    placeholder={`Option ${optionIndex + 1}`}
-                    value={option}
-                    onChange={(e) => updateOption(optionIndex, e.target.value)}
-                    className="h-7 text-sm border-black/20 bg-white text-black placeholder:text-black/40"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeOption(optionIndex)}
-                    className="h-7 w-7 p-0 hover:bg-red-100 hover:text-red-600"
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
+              {(question.options || []).map((option, optionIndex) => {
+                const inputRef = (el: HTMLInputElement | null) => {
+                  // Store ref for programmatic focus access
+                  optionInputRefs.current[optionIndex] = el
+                  
+                  // AUTO-FOCUS: When this is the target index and element exists, focus it
+                  // This happens immediately when React attaches the ref to the DOM element
+                  // The delay from addOption ensures animations play before focus
+                  if (optionIndex === shouldFocusIndex && el) {
+                    console.log(`🎯 Attempting to focus option ${optionIndex + 1}`)
+                    // Use requestAnimationFrame to ensure element is fully mounted
+                    requestAnimationFrame(() => {
+                      el.focus()
+                      el.setSelectionRange(0, 0)
+                      console.log(`✅ Successfully focused option ${optionIndex + 1}`)
+                    })
+                  }
+                }
+                
+                return (
+                  <div key={optionIndex} className="flex items-center gap-2">
+                    <Input
+                      ref={inputRef}
+                      placeholder={`Option ${optionIndex + 1}`}
+                      value={option}
+                      onChange={(e) => updateOption(optionIndex, e.target.value)}
+                      className="h-7 text-sm border-black/20 bg-white text-black placeholder:text-black/40"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeOption(optionIndex)}
+                      className="h-7 w-7 p-0 hover:bg-red-100 hover:text-red-600"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )
+              })}
               <Button
                 type="button"
                 variant="ghost"
