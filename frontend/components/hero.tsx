@@ -61,7 +61,7 @@ export default function Hero() {
         <div ref={buttonRef} className="opacity-0 mt-12 will-change-transform">
           <Button
             size="lg"
-            className="group h-12 rounded-2xl bg-primary-foreground px-8 text-base font-semibold text-primary transition-all hover:scale-105 hover:shadow-2xl md:h-14 md:px-10 md:text-lg"
+            className="group h-12 rounded-2xl bg-primary-foreground px-8 text-base font-semibold text-primary transition-all hover:scale-105 hover:shadow-2xl hover:bg-transparent hover:border-2 hover:border-white hover:text-white md:h-14 md:px-10 md:text-lg"
           >
             Start Building Now
             <svg
