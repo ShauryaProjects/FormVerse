@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -17,10 +17,12 @@ interface QuestionCardProps {
   index: number
   onUpdate: (id: string, updates: Partial<Question>) => void
   onDelete: (id: string) => void
+  isNewlyAdded?: boolean
 }
 
-export default function QuestionCard({ question, index, onUpdate, onDelete }: QuestionCardProps) {
+export default function QuestionCard({ question, index, onUpdate, onDelete, isNewlyAdded }: QuestionCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: question.id })
+  const questionInputRef = useRef<HTMLDivElement>(null)
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -29,10 +31,32 @@ export default function QuestionCard({ question, index, onUpdate, onDelete }: Qu
   }
 
   const hasOptions = ["multiple", "checkbox", "dropdown"].includes(question.type)
+  
+  // Auto-focus question input when newly added (controlled by parent component timing)
+  useEffect(() => {
+    // The parent component handles the animation and focusing
+    // This effect is kept for any additional setup if needed
+  }, [isNewlyAdded])
+
+  const optionInputRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const addOption = () => {
     const options = question.options || []
+    const newIndex = options.length
     onUpdate(question.id, { options: [...options, ""] })
+    
+    // Auto-focus timing strategy:
+    // Wait for React to render the new option input in the DOM
+    // Then focus it immediately so keyboard stays open on mobile
+    setTimeout(() => {
+      const input = optionInputRefs.current[newIndex]
+      if (input) {
+        // Focus the new input field
+        input.focus()
+        // On mobile devices, this keeps the keyboard open
+        // and allows immediate typing
+      }
+    }, 100) // Small delay to ensure DOM is updated
   }
 
   const updateOption = (optionIndex: number, value: string) => {
@@ -44,6 +68,8 @@ export default function QuestionCard({ question, index, onUpdate, onDelete }: Qu
   const removeOption = (optionIndex: number) => {
     const options = question.options?.filter((_, i) => i !== optionIndex) || []
     onUpdate(question.id, { options })
+    // Update refs array to match the new options array
+    optionInputRefs.current = optionInputRefs.current.filter((_, i) => i !== optionIndex)
   }
 
   const handleTextChange = (htmlValue: string) => {
@@ -83,12 +109,14 @@ export default function QuestionCard({ question, index, onUpdate, onDelete }: Qu
           <Label htmlFor={`question-${question.id}`} className="text-sm text-black">
             Question Text
           </Label>
+          <div ref={questionInputRef} data-question-input>
           <FormattedInputField
             value={question.text}
             onChange={handleTextChange}
             placeholder="Enter your question..."
             className="min-h-[60px]"
           />
+          </div>
         </div>
 
         <div className="space-y-1">
@@ -133,6 +161,9 @@ export default function QuestionCard({ question, index, onUpdate, onDelete }: Qu
               {(question.options || []).map((option, optionIndex) => (
                 <div key={optionIndex} className="flex items-center gap-2">
                   <Input
+                    ref={(el) => {
+                      optionInputRefs.current[optionIndex] = el
+                    }}
                     placeholder={`Option ${optionIndex + 1}`}
                     value={option}
                     onChange={(e) => updateOption(optionIndex, e.target.value)}

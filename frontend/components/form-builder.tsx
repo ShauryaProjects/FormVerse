@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import FormSettings from "./form-settings"
@@ -10,6 +10,8 @@ import StepsPanel from "./steps-panel"
 import type { Step } from "./steps-panel"
 import { ArrowLeft, Save, Eye, X } from "lucide-react"
 import Link from "next/link"
+import { auth } from "@/firebase"
+import { onAuthStateChanged, User } from "firebase/auth"
 
 export type QuestionType = "short" | "paragraph" | "multiple" | "checkbox" | "dropdown"
 
@@ -50,12 +52,28 @@ export default function FormBuilder({ initialFormData, formId }: FormBuilderProp
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [isLinkCopied, setIsLinkCopied] = useState(false)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+
+  // Track current user for form isolation
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user)
+    })
+    return () => unsubscribe()
+  }, [])
 
   const activeStepQuestions = formData.questions.filter((q) => q.stepId === activeStepId)
 
   const handleSaveForm = async () => {
     if (!formData.title.trim()) {
       setSaveError("Please enter a form title")
+      return
+    }
+
+    // USER ISOLATION: Validate that user is logged in
+    // Without authentication, we can't associate forms with specific users
+    if (!currentUser) {
+      setSaveError("Please sign in to save forms")
       return
     }
 
@@ -66,6 +84,8 @@ export default function FormBuilder({ initialFormData, formId }: FormBuilderProp
       const url = formId ? `/api/forms/${formId}` : "/api/forms"
       const method = formId ? "PUT" : "POST"
       
+      // USER ISOLATION: Include userId when saving forms
+      // This ensures each form is associated with the logged-in user's UID
       const response = await fetch(url, {
         method,
         headers: {
@@ -76,8 +96,12 @@ export default function FormBuilder({ initialFormData, formId }: FormBuilderProp
           description: formData.description,
           questions: formData.questions,
           steps: formData.steps,
+          userId: currentUser.uid, // USER ISOLATION: Associate form with current user
         }),
       })
+      
+      // Debug log showing user-specific form saving
+      console.log(`✅ Form saved for user: ${currentUser.uid}`)
 
       if (!response.ok) {
         throw new Error("Failed to save form")

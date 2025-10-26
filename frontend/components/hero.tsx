@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef } from "react"
 import { gsap } from "gsap"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export default function Hero() {
   const heroRef = useRef<HTMLDivElement>(null)
@@ -59,20 +60,22 @@ export default function Hero() {
           Build beautiful forms in minutes. Share them instantly and track responses effortlessly — all in one place.
         </p>
         <div ref={buttonRef} className="opacity-0 mt-12 will-change-transform">
-          <Button
-            size="lg"
-            className="group h-12 rounded-2xl bg-primary-foreground px-8 text-base font-semibold text-primary transition-all hover:scale-105 hover:shadow-2xl hover:bg-transparent hover:border-2 hover:border-white hover:text-white md:h-14 md:px-10 md:text-lg"
-          >
-            Start Building Now
-            <svg
-              className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+          <Link href="/builder">
+            <Button
+              size="lg"
+              className="group h-12 rounded-2xl bg-primary-foreground px-8 text-base font-semibold text-primary transition-all hover:scale-105 hover:shadow-2xl hover:bg-transparent hover:border-2 hover:border-white hover:text-white md:h-14 md:px-10 md:text-lg"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </Button>
+              Start Building Now
+              <svg
+                className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Button>
+          </Link>
         </div>
       </div>
 

@@ -35,13 +35,23 @@ const connectDB = async () => {
   }
 }
 
-// GET /api/forms - Get all forms
-export async function GET() {
+// GET /api/forms - Get all forms for the authenticated user
+export async function GET(request: NextRequest) {
   try {
     await connectDB()
     
+    // Extract userId from query parameters
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId')
+    
+    // USER ISOLATION: Build query to filter by userId
+    // This ensures users can only see their own forms, preventing data mix-up
+    const query = userId ? { userId } : { userId: { $exists: false } }
+    
+    const cacheKey = userId ? `forms:user:${userId}` : 'forms:all'
+    
     // Try to get from cache first
-    const cachedForms = await cache.get('forms:all')
+    const cachedForms = await cache.get(cacheKey)
     if (cachedForms) {
       console.log("📦 Serving forms from cache")
       return NextResponse.json({
@@ -51,12 +61,15 @@ export async function GET() {
       })
     }
 
-    // Get from database
-    const forms = await Form.find().sort({ createdAt: -1 })
-    console.log(`📊 Retrieved ${forms.length} forms from database`)
+    // Get from database - only forms belonging to the current user
+    const forms = await Form.find(query).sort({ createdAt: -1 })
+    
+    // Debug log showing user isolation in action
+    console.log(`📄 Forms fetched for user: ${userId || 'no-auth'} (${forms.length} forms)`)
+    console.log("🔒 User data isolation: Each user can only access their own forms")
 
     // Cache for 5 minutes
-    await cache.set('forms:all', forms, 300)
+    await cache.set(cacheKey, forms, 300)
 
     return NextResponse.json({
       success: true,
@@ -99,7 +112,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log("📝 Form data received:", { title: body.title, stepsCount: body.steps?.length, questionsCount: body.questions?.length })
     
-    const { title, description, questions, steps, createdBy } = body
+    const { title, description, questions, steps, createdBy, userId } = body
+    
+    // USER ISOLATION: Validate that userId is provided
+    // Without this, we can't associate forms with specific users and risk data leakage
+    if (!userId) {
+      console.warn("⚠️ Form creation attempted without userId - this is a security risk")
+    }
 
     if (!title) {
       return NextResponse.json({
@@ -138,11 +157,14 @@ export async function POST(request: NextRequest) {
       description: description || "",
       steps: transformedSteps,
       createdBy: createdBy || "anonymous",
+      userId, // USER ISOLATION: Associate form with the logged-in user's UID
     })
 
     console.log("💾 Saving form to database...")
     const savedForm = await newForm.save()
-    console.log(`✅ Form created successfully: ${savedForm._id}`)
+    
+    // Debug log showing user-specific form creation
+    console.log(`✅ Form saved for user: ${userId || 'anonymous'} (Form ID: ${savedForm._id})`)
 
     // Try to invalidate cache (don't fail if Redis is not available)
     try {
@@ -174,12 +196,25 @@ export async function DELETE(request: NextRequest) {
     
     const { searchParams } = new URL(request.url)
     const formId = searchParams.get('id')
+    const userId = searchParams.get('userId')
 
     if (!formId) {
       return NextResponse.json({
         success: false,
         message: "Form ID is required",
       }, { status: 400 })
+    }
+
+    // USER ISOLATION: Verify form ownership before deleting
+    if (userId) {
+      const existingForm = await Form.findById(formId)
+      if (existingForm && existingForm.userId && existingForm.userId !== userId) {
+        console.warn(`⚠️ User ${userId} attempted to delete form ${formId} owned by ${existingForm.userId}`)
+        return NextResponse.json({
+          success: false,
+          message: "Unauthorized: You can only delete your own forms",
+        }, { status: 403 })
+      }
     }
 
     const deletedForm = await Form.findByIdAndDelete(formId)

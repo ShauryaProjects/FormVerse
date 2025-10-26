@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { auth } from "@/firebase"
-import { signOut } from "firebase/auth"
+import { signOut, onAuthStateChanged, User } from "firebase/auth"
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
 import Settings from "@/components/settings"
@@ -55,12 +55,23 @@ export default function AdminDashboardPage() {
     try {
       setIsLoading(true)
       setError(null)
-      const res = await fetch("/api/forms")
+      
+      // Get current user's UID for filtering
+      const currentUser = auth.currentUser
+      
+      // USER ISOLATION: Fetch only forms for the current user
+      // The API will filter by userId to prevent data mix-up between users
+      const userIdParam = currentUser?.uid ? `?userId=${currentUser.uid}` : ''
+      const res = await fetch(`/api/forms${userIdParam}`)
+      
       if (!res.ok) throw new Error("Failed to load forms")
       const response = await res.json()
       const data = response.data || response as FormItem[]
       setForms(data)
       setStats((s) => ({ ...s, totalForms: data.length }))
+      
+      // Debug log showing user-specific data fetching
+      console.log(`📄 Forms fetched for user: ${currentUser?.uid || 'no-auth'} (${data.length} forms)`)
     } catch (e: any) {
       setError(e?.message ?? "Unknown error")
     } finally {
@@ -71,6 +82,26 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     // Initial load of forms
     fetchForms()
+  }, [])
+
+  // USER ISOLATION: Listen to auth state changes and refresh forms when user logs in/out
+  // This ensures data isolation - when a new user logs in, they only see their own forms
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log(`🔐 User authenticated: ${user.uid}`)
+        // Refresh forms for the new user
+        fetchForms()
+      } else {
+        console.log("🔓 User not authenticated")
+        // Clear forms when user logs out
+        setForms([])
+        setSubmissions([])
+        setStats({ totalForms: 0 })
+      }
+    })
+    
+    return () => unsubscribe()
   }, [])
 
   // Refresh forms when page becomes visible (e.g., coming back from form builder)
@@ -140,8 +171,16 @@ export default function AdminDashboardPage() {
   const handleDeleteForm = async (formId: string) => {
     try {
       setError(null)
-      const res = await fetch(`/api/forms?id=${formId}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Failed to delete form")
+      
+      // USER ISOLATION: Include userId when deleting to verify ownership
+      const currentUser = auth.currentUser
+      const userIdParam = currentUser?.uid ? `&userId=${currentUser.uid}` : ''
+      
+      const res = await fetch(`/api/forms?id=${formId}${userIdParam}`, { method: "DELETE" })
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.message || "Failed to delete form")
+      }
       setForms((prev) => prev.filter((f) => f._id !== formId))
       if (selectedForm?._id === formId) handleBackToForms()
     } catch (e: any) {
@@ -183,13 +222,29 @@ export default function AdminDashboardPage() {
     window.location.href = `/builder?id=${form._id}`
   }
 
-  const handleLogout = () => 
+  const handleLogout = () => {
+    console.log("👋 User logged out, cleared local data")
+    
+    // USER ISOLATION: Clear all locally stored form data and cached state
+    // This ensures no user-specific data remains in memory/localStorage after logout
+    setForms([])
+    setSubmissions([])
+    setStats({ totalForms: 0 })
+    setSearch("")
+    setSelectedForm(null)
+    
+    // Clear any localStorage if used
+    if (typeof window !== 'undefined') {
+      localStorage.clear()
+    }
+    
     signOut(auth)
       .then(() => {
         toast.success("Signed out successfully")
         router.push("/")
       })
       .catch((err) => toast.error(err.message || "Logout failed"))
+  }
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -403,7 +458,11 @@ export default function AdminDashboardPage() {
                           </tr>
                         )}
                         {submissions.map((s) => (
-                          <tr key={s._id} className="hover:bg-black/2.5">
+                          <tr 
+                            key={s._id} 
+                            className="hover:bg-black/2.5 cursor-pointer"
+                            onClick={() => window.open(`/form/${selectedForm?._id}`, '_blank')}
+                          >
                             <Td>{s.name || "-"}</Td>
                             <Td>{s.email || "-"}</Td>
                             <Td>{s.submittedAt ? new Date(s.submittedAt).toLocaleString() : "-"}</Td>

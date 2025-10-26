@@ -86,24 +86,34 @@ export async function GET(
     console.log(`✅ Retrieved form ${id} from database:`, { id: form._id, title: form.title })
 
     // Transform data structure to match frontend expectations
+    // Generate consistent IDs for steps that don't have _id
+    const stepsWithIds = form.steps.map((step, idx) => {
+      const stepId = step._id || `step-${idx}-${Date.now()}`
+      return {
+        id: stepId,
+        title: step.title,
+        originalStep: step
+      }
+    })
+    
     const transformedForm = {
       _id: form._id,
       title: form.title,
       description: form.description,
-      steps: form.steps.map(step => ({
-        id: step._id || `step-${Math.random()}`,
-        title: step.title
+      steps: stepsWithIds.map(s => ({
+        id: s.id,
+        title: s.title
       })),
-      questions: form.steps.flatMap(step => 
-        step.questions.map(q => ({
-          id: q._id || `question-${Math.random()}`,
+      questions: stepsWithIds.flatMap(s => 
+        s.originalStep.questions.map(q => ({
+          id: q._id || `question-${Date.now()}-${Math.random()}`,
           text: q.label,
           type: q.type === 'shortAnswer' ? 'short' :
                 q.type === 'multipleChoice' ? 'multiple' :
                 q.type, // paragraph, checkbox, dropdown are already correct
           required: q.required,
           options: q.options || [],
-          stepId: step._id || `step-${Math.random()}`
+          stepId: s.id // Use the consistent step ID
         }))
       ),
       createdAt: form.createdAt,
@@ -152,6 +162,7 @@ export async function PUT(
     
     const { id } = params
     const body = await request.json()
+    const userId = body.userId
 
     if (!id) {
       return NextResponse.json({
@@ -160,11 +171,25 @@ export async function PUT(
       }, { status: 400 })
     }
 
+    // USER ISOLATION: Verify form ownership before updating
+    // This prevents users from modifying forms that don't belong to them
+    if (userId) {
+      const existingForm = await Form.findById(id)
+      if (existingForm && existingForm.userId && existingForm.userId !== userId) {
+        console.warn(`⚠️ User ${userId} attempted to update form ${id} owned by ${existingForm.userId}`)
+        return NextResponse.json({
+          success: false,
+          message: "Unauthorized: You can only update your own forms",
+        }, { status: 403 })
+      }
+    }
+
     console.log("📝 Form update data:", {
       id,
       title: body.title,
       stepsCount: body.steps?.length || 0,
-      questionsCount: body.questions?.length || 0
+      questionsCount: body.questions?.length || 0,
+      userId
     })
 
     // Transform frontend data to MongoDB schema
@@ -185,14 +210,22 @@ export async function PUT(
 
     console.log("🔄 Transformed steps for MongoDB:", transformedSteps)
 
+    // Build update object with userId if provided
+    const updateData: any = {
+      title: body.title,
+      description: body.description || "",
+      steps: transformedSteps,
+      updatedAt: new Date()
+    }
+    
+    // USER ISOLATION: Preserve or update userId on form update
+    if (userId) {
+      updateData.userId = userId
+    }
+
     const updatedForm = await Form.findByIdAndUpdate(
       id,
-      {
-        title: body.title,
-        description: body.description || "",
-        steps: transformedSteps,
-        updatedAt: new Date()
-      },
+      updateData,
       { new: true, runValidators: true }
     )
 
@@ -233,12 +266,27 @@ export async function DELETE(
     await connectDB()
     
     const { id } = params
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId')
 
     if (!id) {
       return NextResponse.json({
         success: false,
         message: "Form ID is required",
       }, { status: 400 })
+    }
+
+    // USER ISOLATION: Verify form ownership before deleting
+    // This prevents users from deleting forms that don't belong to them
+    if (userId) {
+      const existingForm = await Form.findById(id)
+      if (existingForm && existingForm.userId && existingForm.userId !== userId) {
+        console.warn(`⚠️ User ${userId} attempted to delete form ${id} owned by ${existingForm.userId}`)
+        return NextResponse.json({
+          success: false,
+          message: "Unauthorized: You can only delete your own forms",
+        }, { status: 403 })
+      }
     }
 
     const deletedForm = await Form.findByIdAndDelete(id)
@@ -269,4 +317,274 @@ export async function DELETE(
       error: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
     }, { status: 500 })
   }
+}
+
+      error: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+
+    }, { status: 500 })
+
+  }
+
+}
+
+
+
+// PUT /api/forms/[id] - Update a specific form
+
+export async function PUT(
+
+  request: NextRequest,
+
+  { params }: { params: { id: string } }
+
+) {
+
+  try {
+
+    console.log("🔄 Form update request for ID:", params.id)
+
+    
+
+    await connectDB()
+
+    
+
+    const { id } = params
+
+    const body = await request.json()
+
+
+
+    if (!id) {
+
+      return NextResponse.json({
+
+        success: false,
+
+        message: "Form ID is required",
+
+      }, { status: 400 })
+
+    }
+
+
+
+    console.log("📝 Form update data:", {
+
+      id,
+
+      title: body.title,
+
+      stepsCount: body.steps?.length || 0,
+
+      questionsCount: body.questions?.length || 0
+
+    })
+
+
+
+    // Transform frontend data to MongoDB schema
+
+    const transformedSteps = body.steps.map((step: any, index: number) => ({
+
+      title: step.title || `Step ${index + 1}`,
+
+      questions: body.questions
+
+        .filter((q: any) => q.stepId === step.id)
+
+        .map((question: any) => ({
+
+          label: question.text,
+
+          type: question.type === 'short' ? 'shortAnswer' :
+
+                question.type === 'multiple' ? 'multipleChoice' :
+
+                question.type, // paragraph, checkbox, dropdown are already correct
+
+          required: question.required || false,
+
+          options: question.options || [],
+
+          placeholder: question.placeholder || ""
+
+        }))
+
+    }))
+
+
+
+    console.log("🔄 Transformed steps for MongoDB:", transformedSteps)
+
+
+
+    const updatedForm = await Form.findByIdAndUpdate(
+
+      id,
+
+      {
+
+        title: body.title,
+
+        description: body.description || "",
+
+        steps: transformedSteps,
+
+        updatedAt: new Date()
+
+      },
+
+      { new: true, runValidators: true }
+
+    )
+
+
+
+    if (!updatedForm) {
+
+      return NextResponse.json({
+
+        success: false,
+
+        message: "Form not found",
+
+      }, { status: 404 })
+
+    }
+
+
+
+    console.log(`✅ Form updated successfully: ${id}`)
+
+
+
+    // Invalidate caches
+
+    await cache.del('forms:all')
+
+    await cache.del(`form:${id}`)
+
+
+
+    return NextResponse.json({
+
+      success: true,
+
+      data: updatedForm,
+
+      message: "Form updated successfully",
+
+    })
+
+  } catch (error) {
+
+    console.error("❌ Form update error:", error)
+
+    return NextResponse.json({
+
+      success: false,
+
+      message: "Internal server error",
+
+      error: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+
+    }, { status: 500 })
+
+  }
+
+}
+
+
+
+// DELETE /api/forms/[id] - Delete a specific form
+
+export async function DELETE(
+
+  request: NextRequest,
+
+  { params }: { params: { id: string } }
+
+) {
+
+  try {
+
+    await connectDB()
+
+    
+
+    const { id } = params
+
+
+
+    if (!id) {
+
+      return NextResponse.json({
+
+        success: false,
+
+        message: "Form ID is required",
+
+      }, { status: 400 })
+
+    }
+
+
+
+    const deletedForm = await Form.findByIdAndDelete(id)
+
+    
+
+    if (!deletedForm) {
+
+      return NextResponse.json({
+
+        success: false,
+
+        message: "Form not found",
+
+      }, { status: 404 })
+
+    }
+
+
+
+    console.log(`🗑️ Form deleted: ${id}`)
+
+
+
+    // Invalidate caches
+
+    await cache.del('forms:all')
+
+    await cache.del(`form:${id}`)
+
+
+
+    return NextResponse.json({
+
+      success: true,
+
+      data: deletedForm,
+
+      message: "Form deleted successfully",
+
+    })
+
+  } catch (error) {
+
+    console.error("Error:", error)
+
+    return NextResponse.json({
+
+      success: false,
+
+      message: "Internal server error",
+
+      error: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+
+    }, { status: 500 })
+
+  }
+
 }

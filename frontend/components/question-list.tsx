@@ -26,6 +26,7 @@ interface QuestionListProps {
 export default function QuestionList({ questions, onQuestionsChange, stepId }: QuestionListProps) {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const newlyAddedQuestionId = useRef<string | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -45,20 +46,33 @@ export default function QuestionList({ questions, onQuestionsChange, stepId }: Q
   }, [])
 
   const addQuestion = () => {
+    const questionId = `question-${Date.now()}`
     const newQuestion: Question = {
-      id: `question-${Date.now()}`,
+      id: questionId,
       text: "",
       type: "short",
       required: false,
       placeholder: "",
       stepId: stepId,
     }
+    
+    // Track this question as newly added
+    newlyAddedQuestionId.current = questionId
+    
     onQuestionsChange([...questions, newQuestion])
 
-    // Auto-scroll completely down to the new question
+    // Wait for React to render the new question, then animate
     setTimeout(() => {
-      const newCard = listRef.current?.lastElementChild
+      const newCard = listRef.current?.lastElementChild as HTMLElement
       if (newCard) {
+        // Set initial state for animation
+        gsap.set(newCard, { 
+          opacity: 0, 
+          y: 30, 
+          scale: 0.95,
+          transformOrigin: "center"
+        })
+        
         // Find the scrollable parent container
         const scrollContainer = newCard.closest('.overflow-y-auto')
         if (scrollContainer) {
@@ -72,13 +86,41 @@ export default function QuestionList({ questions, onQuestionsChange, stepId }: Q
           newCard.scrollIntoView({ behavior: 'smooth', block: 'end' })
         }
         
-        gsap.fromTo(
-          newCard,
-          { opacity: 0, y: 30, scale: 0.95 },
-          { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.7)" },
-        )
+        // Animate in with a nice bounce effect
+        gsap.to(newCard, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.6,
+          ease: "back.out(1.7)",
+        })
+        
+        // Auto-focus timing strategy:
+        // 1. Wait for GSAP animation to complete (600ms duration)
+        // 2. Add small buffer (100ms) for scroll to complete
+        // 3. Then focus the contentEditable div to trigger keyboard on mobile
+        setTimeout(() => {
+          const questionInput = newCard.querySelector('[data-question-input]') as HTMLDivElement
+          if (questionInput) {
+            // Find the contentEditable div inside FormattedInputField
+            const editableDiv = questionInput.querySelector('div[contenteditable="true"]') as HTMLElement
+            if (editableDiv) {
+              // Force focus on the contentEditable element
+              // This ensures the keyboard stays open on mobile devices
+              editableDiv.focus()
+              // Set cursor to end of text
+              const range = document.createRange()
+              range.selectNodeContents(editableDiv)
+              range.collapse(false)
+              const selection = window.getSelection()
+              selection?.removeAllRanges()
+              selection?.addRange(range)
+            }
+          }
+          newlyAddedQuestionId.current = null // Reset after focusing
+        }, 700) // 600ms animation + 100ms buffer for smooth transition
       }
-    }, 100)
+    }, 0) // Use 0ms timeout to ensure DOM is updated
   }
 
   const updateQuestion = (id: string, updates: Partial<Question>) => {
@@ -124,6 +166,7 @@ export default function QuestionList({ questions, onQuestionsChange, stepId }: Q
                 index={index}
                 onUpdate={updateQuestion}
                 onDelete={deleteQuestion}
+                isNewlyAdded={newlyAddedQuestionId.current === question.id}
               />
             ))}
           </SortableContext>

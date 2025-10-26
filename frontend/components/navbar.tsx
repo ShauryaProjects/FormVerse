@@ -96,11 +96,17 @@ export default function Navbar() {
   }
 
   const handleHomeClick = () => {
-    // Smooth scroll to top of page
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    })
+    // Check if we're on the home page
+    if (window.location.pathname === '/') {
+      // Smooth scroll to top of page
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      })
+    } else {
+      // Navigate to home page
+      router.push('/')
+    }
     // Close mobile menu if open and ensure navbar stays visible during navigation
     setMobileOpen(false)
     setIsVisible(true)
