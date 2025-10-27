@@ -56,6 +56,10 @@ export default function FormBuilder({ initialFormData, formId }: FormBuilderProp
 
   // Track current user for form isolation
   useEffect(() => {
+    // Set initial user state
+    setCurrentUser(auth.currentUser)
+    
+    // Listen for auth changes
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user)
     })
@@ -84,6 +88,13 @@ export default function FormBuilder({ initialFormData, formId }: FormBuilderProp
       const url = formId ? `/api/forms/${formId}` : "/api/forms"
       const method = formId ? "PUT" : "POST"
       
+      console.log("🔍 Debug: Current user:", currentUser?.uid)
+      console.log("🔍 Debug: Saving form with data:", {
+        title: formData.title,
+        stepsCount: formData.steps.length,
+        questionsCount: formData.questions.length
+      })
+      
       // USER ISOLATION: Include userId when saving forms
       // This ensures each form is associated with the logged-in user's UID
       const response = await fetch(url, {
@@ -102,6 +113,7 @@ export default function FormBuilder({ initialFormData, formId }: FormBuilderProp
       
       // Debug log showing user-specific form saving
       console.log(`✅ Form saved for user: ${currentUser.uid}`)
+      console.log("📦 Response status:", response.status)
 
       if (!response.ok) {
         throw new Error("Failed to save form")
