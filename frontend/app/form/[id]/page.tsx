@@ -10,6 +10,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { auth } from "@/firebase"
+import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from "firebase/auth"
 
 type Step = {
   id: string
@@ -45,6 +47,8 @@ export default function FormViewPage() {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [isSigningIn, setIsSigningIn] = useState(false)
 
   useEffect(() => {
     const fetchForm = async () => {
@@ -67,6 +71,14 @@ export default function FormViewPage() {
       fetchForm()
     }
   }, [formId])
+
+  // Track current user for authentication
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user)
+    })
+    return () => unsubscribe()
+  }, [])
 
   const handleInputChange = (questionId: string, value: string | string[]) => {
     setFormData((prev: Record<string, string | string[]>) => ({
@@ -126,6 +138,30 @@ export default function FormViewPage() {
       setError('Failed to submit form. Please try again.')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleSignIn = async () => {
+    setIsSigningIn(true)
+    try {
+      const provider = new GoogleAuthProvider()
+      await signInWithPopup(auth, provider)
+      console.log('✅ User signed in successfully')
+    } catch (error) {
+      console.error('❌ Error signing in:', error)
+      setError('Failed to sign in. Please try again.')
+    } finally {
+      setIsSigningIn(false)
+    }
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth)
+      console.log('✅ User signed out successfully')
+    } catch (error) {
+      console.error('❌ Error signing out:', error)
+      setError('Failed to sign out. Please try again.')
     }
   }
 
@@ -189,26 +225,40 @@ export default function FormViewPage() {
           {/* Dark Grey Separator Line */}
           <div className="border-t border-gray-600 mb-4"></div>
 
-          {/* Google Authentication Mockup */}
+          {/* Google Authentication */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                  </svg>
-                </div>
+                {currentUser?.photoURL ? (
+                  <img 
+                    src={currentUser.photoURL} 
+                    alt="Profile" 
+                    className="w-6 h-6 rounded-full"
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                  </div>
+                )}
                 <div>
-                  <p className="text-xs font-medium text-white">Your Name</p>
-                  <p className="text-xs text-white/70">hey@gmail.com</p>
+                  <p className="text-xs font-medium text-white">
+                    {currentUser?.displayName || "Your Name"}
+                  </p>
+                  <p className="text-xs text-white/70">
+                    {currentUser?.email || "hey@gmail.com"}
+                  </p>
                 </div>
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs border-black/50 text-black hover:bg-white/10 hover:border-white/50 hover:text-white"
+                onClick={currentUser ? handleSignOut : handleSignIn}
+                disabled={isSigningIn}
+                className="h-7 text-xs border-black/50 text-black hover:bg-white/10 hover:border-white/50 hover:text-white disabled:opacity-50"
               >
-                Switch Account
+                {isSigningIn ? "Signing in..." : currentUser ? "Sign Out" : "Sign In"}
               </Button>
             </div>
           </div>
@@ -347,17 +397,17 @@ export default function FormViewPage() {
         </div>
       </div>
 
-      {/* Success Message */}
+      {/* Success Message - Full Screen */}
       {isSubmitted && (
-        <div className="max-w-2xl mx-auto mt-8">
-          <div className="rounded-2xl bg-green-50 border border-green-200 p-6 text-center">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-black rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-green-800 mb-2">Form Submitted Successfully!</h2>
-            <p className="text-green-700">Thank you for your submission. Your responses have been recorded.</p>
+            <h1 className="text-3xl font-bold text-black mb-4">Success!</h1>
+            <p className="text-lg text-gray-600">Your form has been submitted successfully.</p>
           </div>
         </div>
       )}
