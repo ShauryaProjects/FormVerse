@@ -14,10 +14,22 @@ import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
 import Settings from "@/components/settings"
 import Navbar from "@/components/navbar"
+import SubmittedFormView from "@/components/submitted-form-view"
 
 type FormItem = {
   _id: string
   title: string
+  description?: string
+  steps?: Array<{ id: string; title: string }>
+  questions?: Array<{
+    id: string
+    text: string
+    type: string
+    required: boolean
+    options?: string[]
+    stepId: string
+    placeholder?: string
+  }>
   createdAt: string
 }
 
@@ -26,6 +38,7 @@ type SubmissionItem = {
   name?: string
   email?: string
   submittedAt: string
+  responses?: Record<string, string | string[]>
 }
 
 type SectionKey = "dashboard" | "forms" | "settings"
@@ -45,6 +58,7 @@ export default function AdminDashboardPage() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [confirmForm, setConfirmForm] = useState<FormItem | null>(null)
   const [isConfirmLoading, setIsConfirmLoading] = useState(false)
+  const [selectedSubmission, setSelectedSubmission] = useState<SubmissionItem | null>(null)
 
   const mainRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
@@ -152,12 +166,21 @@ export default function AdminDashboardPage() {
   const handleViewSubmissions = async (form: FormItem) => {
     try {
       setError(null)
-      const res = await fetch(`/api/forms/${form._id}/submissions`)
-      if (!res.ok) throw new Error("Failed to load submissions")
-      const response = await res.json()
-      const data = response.data?.submissions || response.submissions || response as SubmissionItem[]
-      setSubmissions(data)
-      setSelectedForm(form)
+      
+      // Fetch submissions
+      const submissionsRes = await fetch(`/api/forms/${form._id}/submissions`)
+      if (!submissionsRes.ok) throw new Error("Failed to load submissions")
+      const submissionsResponse = await submissionsRes.json()
+      const submissionsData = submissionsResponse.data?.submissions || submissionsResponse.submissions || submissionsResponse as SubmissionItem[]
+      
+      // Fetch form details for the submitted form view
+      const formRes = await fetch(`/api/forms/${form._id}`)
+      if (!formRes.ok) throw new Error("Failed to load form details")
+      const formResponse = await formRes.json()
+      const formData = formResponse.data || formResponse
+      
+      setSubmissions(submissionsData)
+      setSelectedForm(formData)
     } catch (e: any) {
       setError(e?.message ?? "Unknown error")
     }
@@ -251,7 +274,7 @@ export default function AdminDashboardPage() {
       <Navbar />
       <div ref={mainRef} className="mx-auto grid min-h-screen w-full grid-cols-1 md:grid-cols-[240px_1fr] pt-16">
         {/* Sidebar */}
-        <aside className="bg-gradient-to-b from-black to-neutral-900 text-white flex flex-col pt-4">
+        <aside className="bg-linear-to-b from-black to-neutral-900 text-white flex flex-col pt-4">
           <div className="flex h-16 items-center px-5 font-semibold tracking-tight">FormVerse Admin</div>
           <nav className="space-y-1 px-3 pb-6 flex-1">
             <SidebarLink
@@ -461,7 +484,7 @@ export default function AdminDashboardPage() {
                           <tr 
                             key={s._id} 
                             className="hover:bg-black/2.5 cursor-pointer"
-                            onClick={() => window.open(`/form/${selectedForm?._id}`, '_blank')}
+                            onClick={() => setSelectedSubmission(s)}
                           >
                             <Td>{s.name || "-"}</Td>
                             <Td>{s.email || "-"}</Td>
@@ -497,6 +520,15 @@ export default function AdminDashboardPage() {
         variant="destructive"
         isLoading={isConfirmLoading}
       />
+
+      {/* Submitted Form View Modal */}
+      {selectedSubmission && selectedForm && (
+        <SubmittedFormView
+          form={selectedForm}
+          submission={selectedSubmission}
+          onClose={() => setSelectedSubmission(null)}
+        />
+      )}
     </div>
   )
 }

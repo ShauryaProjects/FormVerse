@@ -40,9 +40,11 @@ export default function FormViewPage() {
   const formId = params.id as string
   const [form, setForm] = useState<Form | null>(null)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
-  const [formData, setFormData] = useState<Record<string, string>>({})
+  const [formData, setFormData] = useState<Record<string, string | string[]>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
 
   useEffect(() => {
     const fetchForm = async () => {
@@ -66,11 +68,22 @@ export default function FormViewPage() {
     }
   }, [formId])
 
-  const handleInputChange = (questionId: string, value: string) => {
-    setFormData((prev: Record<string, string>) => ({
+  const handleInputChange = (questionId: string, value: string | string[]) => {
+    setFormData((prev: Record<string, string | string[]>) => ({
       ...prev,
       [questionId]: value,
     }))
+  }
+
+  const handleCheckboxChange = (questionId: string, option: string, checked: boolean) => {
+    setFormData((prev: Record<string, string | string[]>) => {
+      const currentValues = (prev[questionId] as string[]) || []
+      if (checked) {
+        return { ...prev, [questionId]: [...currentValues, option] }
+      } else {
+        return { ...prev, [questionId]: currentValues.filter(v => v !== option) }
+      }
+    })
   }
 
   const handleNext = () => {
@@ -82,6 +95,37 @@ export default function FormViewPage() {
   const handlePrev = () => {
     if (currentStepIndex > 0) {
       setCurrentStepIndex(currentStepIndex - 1)
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!form) return
+
+    setIsSubmitting(true)
+    try {
+      const response = await fetch(`/api/forms/${formId}/submissions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          formId,
+          responses: formData,
+          submittedAt: new Date().toISOString(),
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit form')
+      }
+
+      setIsSubmitted(true)
+      console.log('✅ Form submitted successfully')
+    } catch (error) {
+      console.error('❌ Error submitting form:', error)
+      setError('Failed to submit form. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -186,7 +230,8 @@ export default function FormViewPage() {
                     <Input
                       placeholder={question.placeholder && question.placeholder.length > 0 ? question.placeholder : "Your answer"}
                       className="h-8 text-sm border-black/20 bg-white text-black"
-                      disabled
+                      value={(formData[question.id] as string) || ""}
+                      onChange={(e) => handleInputChange(question.id, e.target.value)}
                     />
                   )}
 
@@ -195,15 +240,19 @@ export default function FormViewPage() {
                       placeholder={question.placeholder && question.placeholder.length > 0 ? question.placeholder : "Your answer"}
                       rows={3}
                       className="text-sm border-black/20 bg-white text-black resize-none"
-                      disabled
+                      value={(formData[question.id] as string) || ""}
+                      onChange={(e) => handleInputChange(question.id, e.target.value)}
                     />
                   )}
 
                   {question.type === "multiple" && (
-                    <RadioGroup>
+                    <RadioGroup
+                      value={(formData[question.id] as string) || ""}
+                      onValueChange={(value) => handleInputChange(question.id, value)}
+                    >
                       {question.options?.map((option, optionIndex) => (
                         <div key={optionIndex} className="flex items-center space-x-2">
-                          <RadioGroupItem value={option} id={`${question.id}-${optionIndex}`} disabled />
+                          <RadioGroupItem value={option} id={`${question.id}-${optionIndex}`} />
                           <Label
                             htmlFor={`${question.id}-${optionIndex}`}
                             className="font-normal text-black cursor-pointer"
@@ -217,22 +266,33 @@ export default function FormViewPage() {
 
                   {question.type === "checkbox" && (
                     <div className="space-y-3">
-                      {question.options?.map((option, optionIndex) => (
-                        <div key={optionIndex} className="flex items-center space-x-2">
-                          <Checkbox id={`${question.id}-${optionIndex}`} disabled />
-                          <Label
-                            htmlFor={`${question.id}-${optionIndex}`}
-                            className="font-normal text-black cursor-pointer"
-                          >
-                            {option || `Option ${optionIndex + 1}`}
-                          </Label>
-                        </div>
-                      ))}
+                      {question.options?.map((option, optionIndex) => {
+                        const currentValues = (formData[question.id] as string[]) || []
+                        const isChecked = currentValues.includes(option)
+                        return (
+                          <div key={optionIndex} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`${question.id}-${optionIndex}`} 
+                              checked={isChecked}
+                              onCheckedChange={(checked) => handleCheckboxChange(question.id, option, checked as boolean)}
+                            />
+                            <Label
+                              htmlFor={`${question.id}-${optionIndex}`}
+                              className="font-normal text-black cursor-pointer"
+                            >
+                              {option || `Option ${optionIndex + 1}`}
+                            </Label>
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
 
                   {question.type === "dropdown" && (
-                    <Select disabled>
+                    <Select
+                      value={(formData[question.id] as string) || ""}
+                      onValueChange={(value) => handleInputChange(question.id, value)}
+                    >
                       <SelectTrigger className="h-8 text-sm border-black/20 bg-white text-black">
                         <SelectValue placeholder="Select an option" />
                       </SelectTrigger>
@@ -261,8 +321,12 @@ export default function FormViewPage() {
                 )}
 
                 {isLastStep ? (
-                  <Button className="ml-auto h-8 text-sm bg-black text-white hover:bg-black/90 transition-all duration-300 hover:scale-[1.02] px-4">
-                    Submit Form
+                  <Button 
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="ml-auto h-8 text-sm bg-black text-white hover:bg-black/90 transition-all duration-300 hover:scale-[1.02] px-4 disabled:opacity-50"
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Form"}
                   </Button>
                 ) : (
                   <Button
@@ -282,6 +346,21 @@ export default function FormViewPage() {
           )}
         </div>
       </div>
+
+      {/* Success Message */}
+      {isSubmitted && (
+        <div className="max-w-2xl mx-auto mt-8">
+          <div className="rounded-2xl bg-green-50 border border-green-200 p-6 text-center">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-green-800 mb-2">Form Submitted Successfully!</h2>
+            <p className="text-green-700">Thank you for your submission. Your responses have been recorded.</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
