@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import Navbar from "@/components/navbar"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 type Step = {
   id: string
@@ -16,6 +23,7 @@ type Question = {
   required: boolean
   options?: string[]
   stepId: string
+  placeholder?: string
 }
 
 type Form = {
@@ -77,15 +85,22 @@ export default function FormViewPage() {
     }
   }
 
+  const renderFormattedText = (text: string) => {
+    // If the text is already HTML (contains HTML tags), use it directly
+    if (text.includes('<') && text.includes('>')) {
+      return <span dangerouslySetInnerHTML={{ __html: text }} />
+    }
+    
+    // Fallback for plain text
+    return <span>{text}</span>
+  }
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
-            <p className="mt-4 text-lg">Loading form...</p>
-          </div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
+          <p className="mt-4 text-lg">Loading form...</p>
         </div>
       </div>
     )
@@ -93,13 +108,10 @@ export default function FormViewPage() {
 
   if (error || !form) {
     return (
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Form Not Found</h1>
-            <p className="text-gray-600">{error || "The form you're looking for doesn't exist."}</p>
-          </div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Form Not Found</h1>
+          <p className="text-gray-600">{error || "The form you're looking for doesn't exist."}</p>
         </div>
       </div>
     )
@@ -107,139 +119,170 @@ export default function FormViewPage() {
 
   const currentStep = form.steps[currentStepIndex]
   const currentStepQuestions = form.questions.filter((q: Question) => q.stepId === currentStep.id)
-  const progress = ((currentStepIndex + 1) / form.steps.length) * 100
+  const isFirstStep = currentStepIndex === 0
+  const isLastStep = currentStepIndex === form.steps.length - 1
 
-    return (
-    <div className="min-h-screen bg-white">
-      <Navbar />
-      
-        {/* Form Header */}
-      <div className="bg-linear-to-br from-blue-50 to-indigo-50 py-12">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <h1 className="text-4xl font-bold mb-2">{form.title}</h1>
-          {form.description && (
-            <p className="text-gray-600 text-lg">{form.description}</p>
+  return (
+    <div className="min-h-screen bg-white p-4">
+      <div className="max-w-2xl mx-auto space-y-8">
+        {/* Form Header and Auth Section - Black Background */}
+        <div className="rounded-2xl bg-black p-6 shadow-lg">
+          {/* Form Header */}
+          <div className="mb-4 space-y-2">
+            <h1 className="text-2xl font-bold text-white md:text-3xl wrap-break-word overflow-wrap-anywhere">{form.title || "Untitled Form"}</h1>
+            {form.description && (
+              <div className="text-sm text-white/80 leading-relaxed whitespace-pre-line wrap-break-word overflow-wrap-anywhere">
+                {form.description}
+              </div>
             )}
+            {form.steps.length > 1 && (
+              <div className="text-xs text-white/70 font-medium">
+                {currentStep?.title} ({currentStepIndex + 1} of {form.steps.length})
+              </div>
+            )}
+          </div>
+
+          {/* Dark Grey Separator Line */}
+          <div className="border-t border-gray-600 mb-4"></div>
+
+          {/* Google Authentication Mockup */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-white">Your Name</p>
+                  <p className="text-xs text-white/70">hey@gmail.com</p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs border-black/50 text-black hover:bg-white/10 hover:border-white/50 hover:text-white"
+              >
+                Switch Account
+              </Button>
+            </div>
           </div>
         </div>
 
-      {/* Progress Bar */}
-      <div className="container mx-auto px-4 max-w-4xl py-6">
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-          <div 
-            className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-        <p className="text-sm text-gray-600 mt-2">
-          Step {currentStepIndex + 1} of {form.steps.length}
-        </p>
-      </div>
+        {/* Form Questions Container - Original styling */}
+        <div className="rounded-2xl bg-neutral-100 p-6 shadow-lg">
+          {/* Questions */}
+          {currentStepQuestions.length > 0 ? (
+            <div className="space-y-6">
+              {currentStepQuestions.map((question, index) => (
+                <div key={question.id} className="space-y-2">
+                  <Label className="text-sm font-semibold text-black">
+                    {index + 1}. {renderFormattedText(question.text || "Untitled Question")}
+                    {question.required && <span className="ml-1 text-red-600">*</span>}
+                  </Label>
 
-      {/* Form Content */}
-      <div className="container mx-auto px-4 max-w-4xl py-8">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
-          <h2 className="text-2xl font-semibold mb-6">{currentStep.title}</h2>
-          
-          <div className="space-y-6">
-            {currentStepQuestions.map((question: Question) => {
-              const questionId = question.id
-              const isRequired = question.required
-
-              return (
-                <div key={questionId} className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {question.text}
-                    {isRequired && <span className="text-red-500 ml-1">*</span>}
-                  </label>
-
-                {question.type === "short" && (
-                    <input
-                      type="text"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      onChange={(e: { target: HTMLInputElement }) => handleInputChange(questionId, e.target.value)}
-                      disabled
-                  />
-                )}
-
-                {question.type === "paragraph" && (
-                    <textarea
-                    rows={4}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      onChange={(e: { target: HTMLTextAreaElement }) => handleInputChange(questionId, e.target.value)}
+                  {question.type === "short" && (
+                    <Input
+                      placeholder={question.placeholder && question.placeholder.length > 0 ? question.placeholder : "Your answer"}
+                      className="h-8 text-sm border-black/20 bg-white text-black"
                       disabled
                     />
                   )}
 
-                  {question.type === "multiple" && question.options && (
-                    <div className="space-y-2">
-                      {question.options.map((option: string, optIdx: number) => (
-                        <div key={optIdx} className="flex items-center">
-                          <input
-                            type="radio"
-                            name={questionId}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                            disabled
-                          />
-                          <label className="ml-2 text-gray-700">{option}</label>
-                      </div>
-                    ))}
+                  {question.type === "paragraph" && (
+                    <Textarea
+                      placeholder={question.placeholder && question.placeholder.length > 0 ? question.placeholder : "Your answer"}
+                      rows={3}
+                      className="text-sm border-black/20 bg-white text-black resize-none"
+                      disabled
+                    />
+                  )}
+
+                  {question.type === "multiple" && (
+                    <RadioGroup>
+                      {question.options?.map((option, optionIndex) => (
+                        <div key={optionIndex} className="flex items-center space-x-2">
+                          <RadioGroupItem value={option} id={`${question.id}-${optionIndex}`} disabled />
+                          <Label
+                            htmlFor={`${question.id}-${optionIndex}`}
+                            className="font-normal text-black cursor-pointer"
+                          >
+                            {option || `Option ${optionIndex + 1}`}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  )}
+
+                  {question.type === "checkbox" && (
+                    <div className="space-y-3">
+                      {question.options?.map((option, optionIndex) => (
+                        <div key={optionIndex} className="flex items-center space-x-2">
+                          <Checkbox id={`${question.id}-${optionIndex}`} disabled />
+                          <Label
+                            htmlFor={`${question.id}-${optionIndex}`}
+                            className="font-normal text-black cursor-pointer"
+                          >
+                            {option || `Option ${optionIndex + 1}`}
+                          </Label>
+                        </div>
+                      ))}
                     </div>
                   )}
 
-                  {question.type === "checkbox" && question.options && (
-                    <div className="space-y-2">
-                      {question.options.map((option: string, optIdx: number) => (
-                        <div key={optIdx} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                            disabled
-                          />
-                          <label className="ml-2 text-gray-700">{option}</label>
-                      </div>
-                    ))}
-                  </div>
+                  {question.type === "dropdown" && (
+                    <Select disabled>
+                      <SelectTrigger className="h-8 text-sm border-black/20 bg-white text-black">
+                        <SelectValue placeholder="Select an option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {question.options?.map((option, optionIndex) => (
+                          <SelectItem key={optionIndex} value={option}>
+                            {option || `Option ${optionIndex + 1}`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              ))}
+
+              <div className="mt-6 flex items-center justify-between gap-3">
+                {form.steps.length > 1 && !isFirstStep && (
+                  <Button
+                    onClick={handlePrev}
+                    variant="outline"
+                    className="h-8 text-sm border-black/20 bg-white text-black hover:bg-black hover:text-white transition-all duration-300"
+                  >
+                    <ChevronLeft className="mr-1 h-3 w-3" />
+                    Previous
+                  </Button>
                 )}
 
-                  {question.type === "dropdown" && question.options && (
-                    <select
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
-                      disabled
-                    >
-                      <option value="">Select an option</option>
-                      {question.options.map((option: string, optIdx: number) => (
-                        <option key={optIdx} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                {isLastStep ? (
+                  <Button className="ml-auto h-8 text-sm bg-black text-white hover:bg-black/90 transition-all duration-300 hover:scale-[1.02] px-4">
+                    Submit Form
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleNext}
+                    className="ml-auto h-8 text-sm bg-black text-white hover:bg-black/90 transition-all duration-300 hover:scale-[1.02] px-4"
+                  >
+                    Next Step
+                    <ChevronRight className="ml-1 h-3 w-3" />
+                  </Button>
                 )}
               </div>
-              )
-            })}
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
-            <button
-              onClick={handlePrev}
-              disabled={currentStepIndex === 0}
-              className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-                    Previous
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={currentStepIndex === form.steps.length - 1}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {currentStepIndex === form.steps.length - 1 ? "Done" : "Next"}
-            </button>
+            </div>
+          ) : (
+            <div className="py-12 text-center">
+              <p className="text-black/40 text-sm">No questions yet. Add questions to see the preview.</p>
+            </div>
+          )}
         </div>
       </div>
-        </div>
-      </div>
-    )
+    </div>
+  )
 }
 
