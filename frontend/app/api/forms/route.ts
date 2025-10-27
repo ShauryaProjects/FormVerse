@@ -46,7 +46,8 @@ export async function GET(request: NextRequest) {
     
     // USER ISOLATION: Build query to filter by userId
     // This ensures users can only see their own forms, preventing data mix-up
-    const query = userId ? { userId } : { userId: { $exists: false } }
+    // For backward compatibility with old forms without userId, we also fetch those
+    const query = userId ? { $or: [{ userId }, { userId: { $exists: false } }] } : { userId: { $exists: false } }
     
     const cacheKey = userId ? `forms:user:${userId}` : 'forms:all'
     
@@ -169,6 +170,9 @@ export async function POST(request: NextRequest) {
     // Try to invalidate cache (don't fail if Redis is not available)
     try {
       await cache.del('forms:all')
+      if (userId) {
+        await cache.del(`forms:user:${userId}`)
+      }
       console.log("🗑️ Forms cache invalidated")
     } catch (cacheError) {
       console.warn("⚠️ Cache invalidation failed (Redis may not be available):", cacheError)
