@@ -67,6 +67,8 @@ export async function POST(
 
     const savedSubmission = await newSubmission.save()
     console.log(`✅ Submission created for form ${id}`)
+    console.log(`📧 Email: ${body.email || 'none'}`)
+    console.log(`👤 Name: ${body.name || 'none'}`)
 
     // Invalidate submissions cache
     await cache.del(`submissions:${id}`)

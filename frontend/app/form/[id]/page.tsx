@@ -115,6 +115,27 @@ export default function FormViewPage() {
 
     setIsSubmitting(true)
     try {
+      // Extract email from form responses if user filled an email field
+      let submissionEmail = currentUser?.email || ""
+      let submissionName = currentUser?.displayName || ""
+      
+      // Look for email field in form responses
+      Object.entries(formData).forEach(([questionId, response]) => {
+        const question = form.questions.find(q => q.id === questionId)
+        if (question && question.text.toLowerCase().includes('email') && typeof response === 'string') {
+          submissionEmail = response || submissionEmail
+        }
+        if (question && (question.text.toLowerCase().includes('name') || question.text.toLowerCase().includes('full name')) && typeof response === 'string') {
+          submissionName = response || submissionName
+        }
+      })
+
+      console.log('📤 Submitting form with:', {
+        email: submissionEmail,
+        name: submissionName,
+        responsesCount: Object.keys(formData).length
+      })
+
       const response = await fetch(`/api/forms/${formId}/submissions`, {
         method: 'POST',
         headers: {
@@ -123,6 +144,8 @@ export default function FormViewPage() {
         body: JSON.stringify({
           formId,
           responses: formData,
+          email: submissionEmail,
+          name: submissionName,
           submittedAt: new Date().toISOString(),
         }),
       })
